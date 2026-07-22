@@ -1,0 +1,209 @@
+/* ------------------------------------------------------------------
+   Guardrails, MCP & Tools — deck design system
+
+   One idea carries the visual language: a hook answers with exactly one
+   of three verdicts. Those three verdicts are the palette, and they are
+   used for nothing else, so colour always means something on a slide.
+
+     DENY     rose      stop the call
+     ASK      amber     escalate to a human
+     OBSERVE  emerald   let it run, write it down
+
+   Two chapter accents sit outside the verdict system:
+     HOOKS    violet    the control plane
+     MCP      sky       the capability plane
+
+   Everything is rgba-tinted so it survives both light and dark schema.
+   ------------------------------------------------------------------ */
+
+:root {
+  --vd-deny: 244, 63, 94;
+  --vd-ask: 245, 158, 11;
+  --vd-allow: 16, 185, 129;
+  --vd-hook: 139, 92, 246;
+  --vd-mcp: 14, 165, 233;
+  --vd-mute: 148, 163, 184;
+}
+
+/* --- eyebrow: the small tracked label above a heading ---------------- */
+
+.eyebrow {
+  font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+.eyebrow b {
+  opacity: 1;
+  font-weight: 600;
+}
+
+.eyebrow--deny  { color: rgb(var(--vd-deny));  opacity: 0.85; }
+.eyebrow--ask   { color: rgb(var(--vd-ask));   opacity: 0.85; }
+.eyebrow--allow { color: rgb(var(--vd-allow)); opacity: 0.85; }
+.eyebrow--hook  { color: rgb(var(--vd-hook));  opacity: 0.85; }
+.eyebrow--mcp   { color: rgb(var(--vd-mcp));   opacity: 0.85; }
+
+/* --- cards: a tinted panel with a meaningful left edge --------------- */
+
+.card {
+  border-radius: 0.55rem;
+  padding: 0.7rem 0.9rem;
+  border-left: 3px solid rgba(var(--vd-mute), 0.5);
+  background: rgba(var(--vd-mute), 0.09);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.card > :first-child { margin-top: 0; }
+.card > :last-child  { margin-bottom: 0; }
+
+.card--deny  { border-left-color: rgb(var(--vd-deny));  background: rgba(var(--vd-deny), 0.1); }
+.card--ask   { border-left-color: rgb(var(--vd-ask));   background: rgba(var(--vd-ask), 0.1); }
+.card--allow { border-left-color: rgb(var(--vd-allow)); background: rgba(var(--vd-allow), 0.1); }
+.card--hook  { border-left-color: rgb(var(--vd-hook));  background: rgba(var(--vd-hook), 0.1); }
+.card--mcp   { border-left-color: rgb(var(--vd-mcp));   background: rgba(var(--vd-mcp), 0.1); }
+
+.card-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  display: block;
+  margin-bottom: 0.15rem;
+}
+
+/* --- verdict chips: inline DENY / ASK / OBSERVE ---------------------- */
+
+.chip {
+  font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.08rem 0.42rem;
+  border-radius: 0.28rem;
+  white-space: nowrap;
+}
+
+.chip--deny  { color: rgb(var(--vd-deny));  background: rgba(var(--vd-deny), 0.16); }
+.chip--ask   { color: rgb(var(--vd-ask));   background: rgba(var(--vd-ask), 0.16); }
+.chip--allow { color: rgb(var(--vd-allow)); background: rgba(var(--vd-allow), 0.16); }
+.chip--mute  { color: rgb(var(--vd-mute));  background: rgba(var(--vd-mute), 0.18); }
+
+/* --- the verdict rail: the deck's signature element ------------------ */
+
+.rail {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.rail-item {
+  flex: 1;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(var(--vd-mute), 0.28);
+  background: rgba(var(--vd-mute), 0.05);
+  opacity: 0.42;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.rail-item.is-active {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.rail-item.is-done { opacity: 0.72; }
+
+.rail-verdict {
+  font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  display: block;
+}
+
+.rail-label {
+  font-size: 0.72rem;
+  opacity: 0.75;
+  display: block;
+  line-height: 1.3;
+  margin-top: 0.1rem;
+}
+
+.rail-item--deny  { border-color: rgba(var(--vd-deny), 0.55);  background: rgba(var(--vd-deny), 0.08); }
+.rail-item--ask   { border-color: rgba(var(--vd-ask), 0.55);   background: rgba(var(--vd-ask), 0.08); }
+.rail-item--allow { border-color: rgba(var(--vd-allow), 0.55); background: rgba(var(--vd-allow), 0.08); }
+
+.rail-item--deny  .rail-verdict { color: rgb(var(--vd-deny)); }
+.rail-item--ask   .rail-verdict { color: rgb(var(--vd-ask)); }
+.rail-item--allow .rail-verdict { color: rgb(var(--vd-allow)); }
+
+/* --- step dots: which slide of an exercise you're on ----------------- */
+
+.steps {
+  display: inline-flex;
+  gap: 0.28rem;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+}
+
+.steps i {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.22;
+  display: inline-block;
+}
+
+.steps i.on { opacity: 0.9; }
+
+/* --- checkpoint: the "you are done when" bar ------------------------- */
+
+.checkpoint {
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.85rem;
+  background: rgba(var(--vd-allow), 0.12);
+  border: 1px dashed rgba(var(--vd-allow), 0.5);
+  font-size: 0.85rem;
+}
+
+.checkpoint b { color: rgb(var(--vd-allow)); }
+
+/* --- footnote line pinned under the content ------------------------- */
+
+.footnote {
+  font-size: 0.78rem;
+  font-style: italic;
+  opacity: 0.6;
+}
+
+/* --- tables: quieter rules, tighter rows ---------------------------- */
+
+.slidev-layout table {
+  font-size: 0.82rem;
+}
+
+.slidev-layout table th {
+  font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  font-weight: 600;
+}
+
+.slidev-layout table td { padding-top: 0.3rem; padding-bottom: 0.3rem; }
+
+/* --- headings: a touch tighter so split slides breathe --------------- */
+
+.slidev-layout h1 + .eyebrow { margin-top: -0.6rem; }
+.slidev-layout h1 { line-height: 1.15; }
+
+/* code blocks shouldn't dominate a split slide */
+.slidev-layout pre { font-size: 0.78em; }
+.slidev-layout .cols-tight pre { font-size: 0.72em; }
