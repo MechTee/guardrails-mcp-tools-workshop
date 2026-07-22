@@ -23,6 +23,7 @@
   --vd-hook: 139, 92, 246;
   --vd-mcp: 14, 165, 233;
   --vd-mute: 148, 163, 184;
+  --vd-oc: 236, 72, 153;
 }
 
 /* --- eyebrow: the small tracked label above a heading ---------------- */
@@ -47,6 +48,7 @@
 .eyebrow--allow { color: rgb(var(--vd-allow)); opacity: 0.85; }
 .eyebrow--hook  { color: rgb(var(--vd-hook));  opacity: 0.85; }
 .eyebrow--mcp   { color: rgb(var(--vd-mcp));   opacity: 0.85; }
+.eyebrow--oc    { color: rgb(var(--vd-oc));    opacity: 0.85; }
 
 /* --- cards: a tinted panel with a meaningful left edge --------------- */
 
@@ -67,6 +69,7 @@
 .card--allow { border-left-color: rgb(var(--vd-allow)); background: rgba(var(--vd-allow), 0.1); }
 .card--hook  { border-left-color: rgb(var(--vd-hook));  background: rgba(var(--vd-hook), 0.1); }
 .card--mcp   { border-left-color: rgb(var(--vd-mcp));   background: rgba(var(--vd-mcp), 0.1); }
+.card--oc    { border-left-color: rgb(var(--vd-oc));    background: rgba(var(--vd-oc), 0.1); }
 
 .card-title {
   font-weight: 700;
@@ -133,13 +136,13 @@
   margin-top: 0.1rem;
 }
 
-.rail-item--deny  { border-color: rgba(var(--vd-deny), 0.55);  background: rgba(var(--vd-deny), 0.08); }
-.rail-item--ask   { border-color: rgba(var(--vd-ask), 0.55);   background: rgba(var(--vd-ask), 0.08); }
-.rail-item--allow { border-color: rgba(var(--vd-allow), 0.55); background: rgba(var(--vd-allow), 0.08); }
+.rail-item--deny    { border-color: rgba(var(--vd-deny), 0.55);  background: rgba(var(--vd-deny), 0.08); }
+.rail-item--rewrite { border-color: rgba(var(--vd-ask), 0.55);   background: rgba(var(--vd-ask), 0.08); }
+.rail-item--observe { border-color: rgba(var(--vd-allow), 0.55); background: rgba(var(--vd-allow), 0.08); }
 
-.rail-item--deny  .rail-verdict { color: rgb(var(--vd-deny)); }
-.rail-item--ask   .rail-verdict { color: rgb(var(--vd-ask)); }
-.rail-item--allow .rail-verdict { color: rgb(var(--vd-allow)); }
+.rail-item--deny    .rail-verdict { color: rgb(var(--vd-deny)); }
+.rail-item--rewrite .rail-verdict { color: rgb(var(--vd-ask)); }
+.rail-item--observe .rail-verdict { color: rgb(var(--vd-allow)); }
 
 /* --- step dots: which slide of an exercise you're on ----------------- */
 

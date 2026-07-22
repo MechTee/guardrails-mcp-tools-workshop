@@ -1,11 +1,14 @@
 <script setup>
-// The deck's spine: a PreToolUse hook returns exactly one of three verdicts.
-// Every hook slide lights the one it is teaching, so people always know
-// where they are in the arc.
+// The deck's spine: an OpenCode `tool.execute.*` hook can do exactly three
+// things to a pending tool call. Every plugin slide lights the one it is
+// teaching, so people always know where they are in the arc.
 //
 //   <VerdictRail active="deny" />
-//   <VerdictRail active="ask" done="deny" />
-//   <VerdictRail active="deny,ask,allow" />
+//   <VerdictRail active="rewrite" done="deny" />
+//   <VerdictRail active="deny,rewrite,observe" />
+//
+// "ask" is deliberately absent: in OpenCode that verdict lives in the
+// declarative `permission` config, not in a plugin. See the Ex1 slide on it.
 
 defineProps({
   active: { type: String, default: '' },
@@ -13,9 +16,9 @@ defineProps({
 })
 
 const VERDICTS = [
-  { key: 'deny', verdict: 'DENY', label: 'Stop the call. Hand the model a reason.' },
-  { key: 'ask', verdict: 'ASK', label: 'Pause and put a human in the loop.' },
-  { key: 'allow', verdict: 'OBSERVE', label: 'Let it run — and write it down.' },
+  { key: 'deny', verdict: 'DENY', label: 'Throw. The call never runs.' },
+  { key: 'rewrite', verdict: 'REWRITE', label: 'Mutate the args. Sanitize, don\'t refuse.' },
+  { key: 'observe', verdict: 'OBSERVE', label: 'Let it run — and write it down.' },
 ]
 
 function has(list, key) {
