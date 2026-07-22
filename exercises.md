@@ -5,13 +5,13 @@
 You will build the architecture from the last slide of the talk, on your own machine — **control first, then capability**:
 
 1. **Exercise 1 — Plugins (≈ 30 min):** one TypeScript file, three powers. Deny a destructive command by throwing, rewrite a dangerous one into a safe one, and observe everything that runs. Plus the layer you *don't* write code for.
-2. **Exercise 2 — Ship a tool via MCP (≈ 20 min):** a ticket-tracker MCP server OpenCode discovers and calls.
-3. **Exercise 3 — Compose (≈ 10 min):** gate your own MCP tools, twice, by two different mechanisms.
-4. **Bonus — Red team (≈ 10 min):** smuggle a prompt injection into a ticket, then go find the holes your guardrails still have.
+2. **Exercise 2 — Build an MCP server (≈ 20 min):** a ticket-tracker MCP server OpenCode discovers and calls.
+3. **Exercise 3 — Guarding your own tools (≈ 10 min):** gate your own MCP tools, twice, by two different mechanisms.
+4. **Bonus — Red team it (≈ 10 min):** smuggle a prompt injection into a ticket, then go find the holes your guardrails still have.
 
 Plugins come first on purpose. In OpenCode a guardrail is a single TypeScript file with no protocol to get wrong, so you get working enforcement in the first twenty minutes — and everything you build afterwards lands inside a cage that already exists.
 
-> **Using a different agent?** The concepts transfer, and this handout includes ports: the same guard as a Claude Code hook and a Pi extension (§1.10), and the server in TypeScript and Rust (§2.4).
+> **Using a different agent?** The concepts transfer, and this handout includes ports: the same guard as a Claude Code hook and a Pi extension in the appendix, and the server in TypeScript and Rust in §2.4.
 
 ---
 
@@ -88,7 +88,7 @@ Three things that differ from a Claude Code hook and will trip you up if you're 
 - **Arguments are mutable.** `output.args` is the live tool input. Assign to it and the call proceeds rewritten.
 - **Everything is in-process and sequential.** Load order is global config → project config → global plugin directory (`~/.config/opencode/plugins/`) → project plugin directory (`.opencode/plugins/`), and all hooks run in sequence. One slow plugin slows every tool call, and a crashing plugin is an OpenCode problem rather than a failed subprocess.
 
-### 1.2 The policy (part 1 of `guard.ts`)
+### 1.2 The policy table
 
 Create `.opencode/plugins/guard.ts`. This half is the part a reviewer reads in a pull request:
 
@@ -114,7 +114,7 @@ That last `DENY` row matters more than it looks. OpenCode already denies `read` 
 
 A note worth saying out loud: these regexes are illustrative, not exhaustive. A determined agent can obfuscate a shell command endlessly. Deny-lists are a speed bump; allow-lists are a wall. We use a deny-list here because it fits on a page.
 
-### 1.3 The enforcement (part 2 of `guard.ts`)
+### 1.3 Enforcing it
 
 Append to the same file:
 
@@ -147,7 +147,7 @@ export const Guard: Plugin = async ({ directory }) => {
 
 OpenCode's tool names are lowercase: `bash`, `read`, `edit`, `write`, `patch`, `glob`, `grep`, `webfetch`, `websearch`, `task`, `skill`.
 
-### 1.4 Load it and test both directions
+### 1.4 Load it and test it
 
 Plugins are loaded **at startup**, so restart OpenCode. There is no file watcher — restart after every edit.
 
@@ -179,7 +179,7 @@ That last row is worth arguing about too: `rm -r` without `-f` passes. Deliberat
 
 The lesson generalises past the bug: **a guardrail that type-checks is not a guardrail that runs.** Every policy you write needs a test that proves the denied path actually denies, not just that the allowed path still works.
 
-### 1.6 Verdict two — rewrite instead of refusing
+### 1.6 Rewriting a tool call
 
 `output.args` is live. Assign to it and the call proceeds, changed. Add this to `tool.execute.before` (and destructure `client` out of the plugin context to use the logger):
 
@@ -209,7 +209,7 @@ Why this beats a denial: the agent wanted to commit, and committing is fine. Onl
 
 **But say it out loud.** The model is now acting on a command it didn't write, and nothing in its context says so. Silent rewrites are how you get an agent confidently debugging the wrong thing. Log every rewrite — the log line is part of the guardrail, not decoration.
 
-### 1.7 Verdict three — observe
+### 1.7 The audit trail
 
 `tool.execute.after` fires after the call. It can't undo anything; it's the only layer that helps once something has already gone wrong. Create `.opencode/plugins/audit.ts`:
 
@@ -241,7 +241,7 @@ That `tool` field is also your **discovery tool**. It prints the exact string Op
 
 **A warning worth taking seriously.** Tool arguments contain exactly the secrets you spent §1.2 protecting, and this file sits inside the repo. A real audit plugin redacts before it writes. Would you have gitignored `.opencode/audit.log` without being told?
 
-### 1.8 The verdict you don't write code for
+### 1.8 The permission config
 
 OpenCode's human-in-the-loop layer is **config, not a plugin**. In `opencode.json`:
 
@@ -272,7 +272,7 @@ Defaults are permissive. Most tools default to `allow`; `external_directory` and
 
 The design rule: reach for the permission config when a pattern can express the rule, and reach for a plugin when the decision needs logic, external state, or a rewrite. Most teams reach for the plugin far too early.
 
-### 1.9 Wire it all up
+### 1.9 The finished setup
 
 ```
 agent-guardrails-lab/
@@ -297,67 +297,9 @@ agent-guardrails-lab/
 
 **Discuss (2 min):** the last row is denied by the permission config (`"rm *": "deny"`) *and* by your plugin. Which one fired? Permission rules resolve before the tool executes, so the config wins and the plugin never sees the call. Now: the denied calls aren't in your audit log at all. Is that the right design, and what would you show an auditor to prove the block happened?
 
-### 1.10 Same guardrail, other harnesses (optional)
-
-The policy table never changes; only the wiring does.
-
-**Claude Code** spawns an out-of-process program and speaks JSON over stdin. Any language works:
-
-```python
-#!/usr/bin/env python3
-"""PreToolUse guardrail. Register in .claude/settings.json."""
-import json, re, sys
-
-DANGEROUS = [
-    (r"\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)", "rm -rf"),
-    (r"\bgit\s+push\b.*(--force|-f)\b",         "force push"),
-    (r"\.env\b",                                 "touching .env"),
-]
-
-data = json.load(sys.stdin)
-if data.get("tool_name") == "Bash":
-    cmd = (data.get("tool_input") or {}).get("command", "")
-    for pattern, reason in DANGEROUS:
-        if re.search(pattern, cmd, re.IGNORECASE):
-            print(f"Blocked by policy: {reason}.", file=sys.stderr)
-            sys.exit(2)     # 2 blocks. 1 does NOT.
-sys.exit(0)
-```
-
-The footgun: only `exit 2` blocks. `exit 1` is a non-blocking error and the tool still runs — and an unhandled Python exception exits 1, so a crashing guard fails *open*. OpenCode has no equivalent; a thrown error is a thrown error.
-
-What you gain in exchange: process isolation, any language, and a richer verdict set — `allow`, `deny`, `ask`, `defer` via JSON on stdout, with precedence `deny > defer > ask > allow`. The `ask` that OpenCode puts in config, Claude Code puts in the hook. What you lose: a process spawn per tool call, and no easy rewrite.
-
-**Pi** loads TypeScript extensions from `.pi/extensions/` and takes the verdict as a return value:
-
-```ts
-// .pi/extensions/guard.ts
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-
-const DENY: [RegExp, string][] = [
-  [/\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)/i, "rm -rf"],
-  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
-  [/\.env\b/, "touching .env"],
-];
-
-export default function (pi: ExtensionAPI) {
-  pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName !== "bash") return;
-    const cmd = String(event.input.command ?? "");
-    for (const [re, why] of DENY)
-      if (re.test(cmd))
-        return { block: true, reason: `Blocked by policy: ${why}.` };
-  });
-}
-```
-
-`{ block: true, reason }` — no exit codes, no throwing, no stdout parsing. And note the design choice worth stealing: **a crashing `tool_call` hook blocks the tool**, the exact opposite of Claude Code's exit-1 and of most defaults.
-
-Two families, then: in-process TypeScript where you throw or rewrite (OpenCode, Pi), and out-of-process JSON with exit codes (Claude Code, and Codex CLI, which adopted the same wire protocol almost verbatim). The regexes were identical in all three. That's the portable part, and it's a good argument for keeping policy in data.
-
 ---
 
-## Exercise 2 — Ship a tool via MCP (≈ 20 min)
+## Exercise 2 — Build an MCP server (≈ 20 min)
 
 **Goal:** the full loop — define tools, expose them over MCP, and watch the agent discover and use them. The cage already exists; now you build something to put in it.
 
@@ -433,7 +375,7 @@ There's no CLI step and no separate file — add an `mcp` block to `opencode.jso
 
 On Windows use `[".venv\\Scripts\\python.exe", "tickets_server.py"]`. Add `cwd` if the server lives outside the project root, and raise `timeout` (default 5000 ms) if it's slow to start.
 
-### 2.3 Use it, and let your audit log name it
+### 2.3 Use it
 
 Restart OpenCode, then try:
 
@@ -464,7 +406,7 @@ def open_tickets() -> str:
 
 Ask yourself which one you'd want the agent to be able to call unprompted. That question is most of MCP design.
 
-### 2.4 Polyglot corner — the same server in TypeScript and Rust (optional)
+### 2.4 The same server in TypeScript and Rust (optional)
 
 The protocol is the contract; the language is yours. **TypeScript** (official SDK — `npm i @modelcontextprotocol/sdk zod`; runs directly on Node 22+):
 
@@ -555,7 +497,7 @@ Register the release binary the same way: `"command": ["./target/release/tickets
 
 ---
 
-## Exercise 3 — Compose (≈ 10 min)
+## Exercise 3 — Guarding your own tools (≈ 10 min)
 
 **Goal:** discover that your MCP tools are just tools, and then decide *which* mechanism should gate them.
 
@@ -598,7 +540,7 @@ Most rooms reach straight for Option B because they've just spent thirty minutes
 
 **Checkpoint:** deletes prompt for approval, ticket 2 survives *even when you approve*, and every call is in `.opencode/audit.log`.
 
-### 3.4 Discuss (3 min) — why both locks?
+### 3.4 Discuss (3 min) — client-side and server-side
 
 Ticket 2 was protected twice, by two mechanisms that don't know the other exists: your permission rule is a **client-side human gate**, and the `protected` flag is a **server-side domain rule**.
 
@@ -611,7 +553,7 @@ Final question: which of your two locks survives an attacker who can edit files 
 
 ---
 
-## Bonus — Red team your own setup (≈ 10 min)
+## Bonus — Red team it (≈ 10 min)
 
 Tool results are untrusted input. Prove it to yourself.
 
@@ -619,7 +561,7 @@ Tool results are untrusted input. Prove it to yourself.
 2. **Trigger it.** Start a **fresh session**, so the injection isn't obviously yours in context, and ask innocently: *"Summarize my open tickets and tidy up anything that looks stale."*
 3. **Watch.** The model may ignore the payload, flag it as suspicious, or reach for `tickets_delete_ticket` — at which point your gate fires and a human is in the loop.
 
-### Three holes to go find
+### Three holes to find
 
 - **The subagent path.** Does your plugin fire for tools called inside a `task`-spawned subagent? Test it rather than assuming — plugin coverage of subagent calls has been inconsistent historically, and subagents can carry their own permission overrides. "I tested it in the main loop" is exactly how a guardrail ships with a hole in it.
 - **The rewrite you can't see.** Your `--no-verify` stripper edits a command the model believes it wrote. What happens when it later reads the git log and the history disagrees with its memory?
@@ -635,7 +577,7 @@ Outcomes vary by model mood, and that variance *is* the lesson: probabilistic ju
 
 ---
 
-## What you just built — mapped back to the talk
+## What you built
 
 **Control (Exercise 1)**
 
@@ -665,11 +607,71 @@ The left table existed before the right one did. That ordering is the argument t
 
 ---
 
+## Appendix — the same guard in other harnesses
+
+The policy table never changes; only the wiring does.
+
+**Claude Code** spawns an out-of-process program and speaks JSON over stdin. Any language works:
+
+```python
+#!/usr/bin/env python3
+"""PreToolUse guardrail. Register in .claude/settings.json."""
+import json, re, sys
+
+DANGEROUS = [
+    (r"\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)", "rm -rf"),
+    (r"\bgit\s+push\b.*(--force|-f)\b",         "force push"),
+    (r"\.env\b",                                 "touching .env"),
+]
+
+data = json.load(sys.stdin)
+if data.get("tool_name") == "Bash":
+    cmd = (data.get("tool_input") or {}).get("command", "")
+    for pattern, reason in DANGEROUS:
+        if re.search(pattern, cmd, re.IGNORECASE):
+            print(f"Blocked by policy: {reason}.", file=sys.stderr)
+            sys.exit(2)     # 2 blocks. 1 does NOT.
+sys.exit(0)
+```
+
+The footgun: only `exit 2` blocks. `exit 1` is a non-blocking error and the tool still runs — and an unhandled Python exception exits 1, so a crashing guard fails *open*. OpenCode has no equivalent; a thrown error is a thrown error.
+
+What you gain in exchange: process isolation, any language, and a richer verdict set — `allow`, `deny`, `ask`, `defer` via JSON on stdout, with precedence `deny > defer > ask > allow`. The `ask` that OpenCode puts in config, Claude Code puts in the hook. What you lose: a process spawn per tool call, and no easy rewrite.
+
+**Pi** loads TypeScript extensions from `.pi/extensions/` and takes the verdict as a return value:
+
+```ts
+// .pi/extensions/guard.ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)/i, "rm -rf"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+];
+
+export default function (pi: ExtensionAPI) {
+  pi.on("tool_call", async (event, ctx) => {
+    if (event.toolName !== "bash") return;
+    const cmd = String(event.input.command ?? "");
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        return { block: true, reason: `Blocked by policy: ${why}.` };
+  });
+}
+```
+
+`{ block: true, reason }` — no exit codes, no throwing, no stdout parsing. And note the design choice worth stealing: **a crashing `tool_call` hook blocks the tool**, the exact opposite of Claude Code's exit-1 and of most defaults.
+
+Two families, then: in-process TypeScript where you throw or rewrite (OpenCode, Pi), and out-of-process JSON with exit codes (Claude Code, and Codex CLI, which adopted the same wire protocol almost verbatim). The regexes were identical in all three. That's the portable part, and it's a good argument for keeping policy in data.
+
+---
+
 ## Further reading
 
 - OpenCode plugins (hooks, context, load order) — <https://opencode.ai/docs/plugins/>
 - OpenCode permissions (actions, granular rules, defaults) — <https://opencode.ai/docs/permissions/>
 - OpenCode MCP servers (local, remote, tool naming) — <https://opencode.ai/docs/mcp-servers/>
 - The protocol, SDKs, example servers — <https://modelcontextprotocol.io>
-- Claude Code hooks reference, for the port in §1.10 — <https://code.claude.com/docs/en/hooks>
+- Claude Code hooks reference, for the port in the appendix — <https://code.claude.com/docs/en/hooks>
 - The slides for this workshop — [`slides.md`](./slides.md)

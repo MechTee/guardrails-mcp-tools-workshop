@@ -33,7 +33,7 @@ Welcome (60s). Frame: agentic engineering means the model doesn't just write cod
 
 ---
 
-# An agent is a model in a loop — with hands
+# How an agent actually runs
 
 <div class="grid grid-cols-2 gap-10 pt-2">
 <div>
@@ -70,7 +70,7 @@ flowchart TB
 
 ---
 
-# A tool is a typed contract the model can call
+# Anatomy of a tool call
 
 <span class="text-sm op-60">Pillar 1 · Tools</span>
 
@@ -120,7 +120,7 @@ model call → validate → execute → observe
 
 ---
 
-# Four rules for tools agents actually use well
+# Four rules for tool design
 
 <span class="text-sm op-60">Pillar 1 · Tools</span>
 
@@ -156,7 +156,7 @@ model call → validate → execute → observe
 
 ---
 
-# Before MCP: every agent × every system = custom glue
+# The problem MCP solves
 
 <span class="text-sm op-60">Pillar 2 · MCP</span>
 
@@ -210,7 +210,7 @@ flowchart LR
 
 ---
 
-# One protocol, a client–server split, three primitives
+# How MCP fits together
 
 <span class="text-sm op-60">Pillar 2 · MCP</span>
 
@@ -237,7 +237,7 @@ flowchart LR
 
 ---
 
-# What can go wrong will, eventually, be attempted
+# The threat model
 
 <span class="text-sm op-60">Pillar 3 · Guardrails</span>
 
@@ -275,7 +275,7 @@ flowchart LR
 
 ---
 
-# Guardrails come in layers — stack them
+# Where guardrails go
 
 <span class="text-sm op-60">Pillar 3 · Guardrails</span>
 
@@ -301,7 +301,7 @@ flowchart LR
 
 ---
 
-# Guardrails are your code, at every tool call
+# Two places to put policy
 
 <span class="text-sm op-60">Pillar 3 · Guardrails</span>
 
@@ -352,7 +352,7 @@ export const Guard: Plugin = async () => ({
 
 ---
 
-# One idea, four dialects — guardrails across clients
+# The same guardrail in four harnesses
 
 <span class="text-sm op-60">Pillar 3 · Guardrails</span>
 
@@ -396,7 +396,7 @@ export const Guard: Plugin = async () => ({
 
 ---
 
-# One request through a guarded agent
+# One request, end to end
 
 <span class="text-sm op-60">Putting it together</span>
 
@@ -426,7 +426,7 @@ flowchart LR
 
 ---
 
-# Five things to take into the exercises
+# Before you start
 
 <span class="text-sm op-60">Recap</span>
 
@@ -453,7 +453,7 @@ layout: center
 class: text-center
 ---
 
-# Control first. Then capability.
+# What you'll build
 
 <span class="op-60">Hands-on · ≈ 60–75 min · solo or pairs · agent: <b>OpenCode</b></span>
 
@@ -465,12 +465,12 @@ One TypeScript file, three powers: <b>deny</b> a destructive command, <b>rewrite
 </div>
 <div class="card card--mcp">
 <span class="eyebrow eyebrow--mcp">Exercise 2 · ≈ 20 min</span>
-<span class="card-title">Ship a tool via MCP</span>
+<span class="card-title">Build an MCP server</span>
 A ticket-tracker server OpenCode discovers and calls. Python, with TypeScript and Rust ports.
 </div>
 <div class="card card--allow">
 <span class="eyebrow eyebrow--allow">Exercise 3 · ≈ 10 min</span>
-<span class="card-title">Compose the two</span>
+<span class="card-title">Guard your own tools</span>
 Gate your own MCP tools — twice, by two different mechanisms, for two different reasons.
 </div>
 </div>
@@ -480,7 +480,7 @@ Gate your own MCP tools — twice, by two different mechanisms, for two differen
 Hide a prompt injection inside a ticket, then find the hole your guardrails still have.
 </div>
 
-<div class="mt-4 text-xs op-50">Different agent? The same guard ships as a <b>Claude Code hook</b> and a <b>Pi extension</b>; the server in <b>TypeScript</b> and <b>Rust</b>. Slides ahead.</div>
+<div class="mt-4 text-xs op-50">Different agent? The same guard as a <b>Claude Code hook</b> and a <b>Pi extension</b> is in the appendix at the end; the server in <b>TypeScript</b> and <b>Rust</b> sits with Exercise 2.</div>
 
 <!--
 ~40s. Say why plugins come first: control is the thing people skip, and in OpenCode it's a single TypeScript file with no protocol to get wrong. By the time anyone builds a tool in Ex2, the cage already exists.
@@ -490,7 +490,7 @@ Hide a prompt injection inside a ticket, then find the hole your guardrails stil
 
 # Exercise 0 · Setup <span class="text-base op-50">≈ 5 min</span>
 
-<span class="eyebrow">Do the left column now. Kick off the right one now too — pip is slower than you are.</span>
+<span class="eyebrow">Do the left column now. Start the right one too — the install takes a while.</span>
 
 <div class="grid grid-cols-2 gap-6 pt-3">
 <div>
@@ -576,9 +576,9 @@ Every call appended to a JSONL trail you can <code>grep</code>.
 
 ---
 
-# A plugin is a function that returns hooks
+# The plugin contract
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> — stop what must never run <Steps n="1" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="1" total="5" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-2">
 <div>
@@ -632,9 +632,9 @@ Global config → project config → global plugins → project plugins, and <b>
 
 ---
 
-# The policy is a table, not a pile of `if`s
+# The policy table
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> — stop what must never run <Steps n="2" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="2" total="5" /></span>
 
 Create `.opencode/plugins/guard.ts` — **part 1 of 2**, the part you review in a pull request:
 
@@ -665,9 +665,9 @@ const PROTECTED_PATHS = /(^|\/)(\.env|\.git\/|secrets?\/|.*\.pem$)/
 
 ---
 
-# ...and the enforcement half is a `throw`
+# Enforcing it
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> — stop what must never run <Steps n="3" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="3" total="5" /></span>
 
 Append **part 2 of 2** to the same file:
 
@@ -704,9 +704,9 @@ export const Guard: Plugin = async ({ directory }) => {
 
 ---
 
-# Load it, then test both directions
+# Load it and test it
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> — stop what must never run <Steps n="4" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="4" total="5" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -729,13 +729,13 @@ Plugins are loaded **at startup**, so restart OpenCode. Then prompt it with each
 <div>
 
 <div class="card card--oc mb-3">
-<span class="card-title">Now delete your <code>.env</code> rule and retry row 4</span>
+<span class="card-title">Delete your <code>.env</code> rule and retry row 4</span>
 <code>read</code> on <code>.env</code> is <b>denied by OpenCode's defaults</b>, so row 3 was never yours to catch. Row 4 goes through <code>bash</code>, which defaults to <b>allow</b> — that one is entirely your plugin.<br><br>
 Knowing which layer actually stopped something is most of guardrail engineering. Put the rule back afterwards.
 </div>
 
 <div class="card">
-<span class="card-title">A guardrail that blocks everything is just an outage</span>
+<span class="card-title">Test the allow path too</span>
 Rows 1 and 5 matter as much as 2–4. The last one is worth arguing about: <code>rm -r</code> without <code>-f</code> passes. Deliberate, or a gap?
 </div>
 
@@ -750,7 +750,7 @@ Rows 1 and 5 matter as much as 2–4. The last one is worth arguing about: <code
 
 # When the plugin doesn't fire
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> — stop what must never run <Steps n="5" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="5" total="5" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -774,13 +774,13 @@ Use <code>client.app.log({ body: { service, level, message } })</code> rather th
 <div>
 
 <div class="card card--ask mb-3">
-<span class="card-title">⚠️ The trap worth knowing about</span>
+<span class="card-title">⚠️ A hook that never fires</span>
 <code>@opencode-ai/plugin</code> exports a <code>permission.ask</code> hook type. Write one and it type-checks, loads, and <b>never fires</b> — the permission system publishes straight to the UI without calling plugins.<br><br>
 It's a known open issue with an unmerged fix. <b>Check your version before relying on it.</b>
 </div>
 
 <div class="card card--deny">
-<span class="card-title">The lesson, not the bug</span>
+<span class="card-title">Why this matters</span>
 A guardrail that type-checks is not a guardrail that runs. Every policy you write needs a test that proves the <b>denied</b> path actually denies — not just that the allowed path still works.
 </div>
 
@@ -793,9 +793,9 @@ A guardrail that type-checks is not a guardrail that runs. Every policy you writ
 
 ---
 
-# Verdict two: rewrite instead of refusing
+# Rewriting a tool call
 
-<span class="eyebrow eyebrow--ask"><b>Exercise 1 · Rewrite</b> — the one most harnesses can't do</span>
+<span class="eyebrow eyebrow--ask"><b>Exercise 1 · Rewrite</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -835,7 +835,7 @@ The agent wanted to commit, and committing is fine. Only the <i>bypass</i> was t
 </div>
 
 <div class="card card--deny mb-3">
-<span class="card-title">Say it out loud, though</span>
+<span class="card-title">The cost of doing this</span>
 The model is now acting on a command it didn't write, and nothing in its context says so. Silent rewrites are how you get an agent confidently debugging the wrong thing. <b>Log every rewrite.</b>
 </div>
 
@@ -853,9 +853,9 @@ The model is now acting on a command it didn't write, and nothing in its context
 
 ---
 
-# Verdict three: let it run, and write it down
+# The audit trail
 
-<span class="eyebrow eyebrow--allow"><b>Exercise 1 · Observe</b> — the layer that can't say no</span>
+<span class="eyebrow eyebrow--allow"><b>Exercise 1 · Observe</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -895,7 +895,7 @@ It's the only layer that helps <i>after</i> something goes wrong. Everything els
 </div>
 
 <div class="card card--mcp mb-3">
-<span class="card-title">It's also your discovery tool</span>
+<span class="card-title">It also names your tools</span>
 That <code>tool</code> field prints the exact string OpenCode uses for every call. In Exercise 2 it will tell you your MCP tools' real names — no guessing at prefixes.
 </div>
 
@@ -913,9 +913,9 @@ Tool args contain exactly the secrets you spent this exercise protecting, and th
 
 ---
 
-# The verdict you don't write code for
+# The permission config
 
-<span class="eyebrow eyebrow--oc"><b>Exercise 1</b> — where <code>ask</code> actually lives</span>
+<span class="eyebrow eyebrow--oc"><b>Exercise 1 · Ask</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -972,9 +972,9 @@ Approves anything that would have asked. Explicit <code>deny</code> rules still 
 
 ---
 
-# Wire it all up
+# The finished setup
 
-<span class="eyebrow eyebrow--oc"><b>Exercise 1</b> — the complete setup</span>
+<span class="eyebrow eyebrow--oc"><b>Exercise 1</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -991,9 +991,11 @@ agent-guardrails-lab/
 ```
 
 <div class="card mt-3">
-<span class="card-title">Two mechanisms, on purpose</span>
+<span class="card-title">Two mechanisms</span>
 The permission config is <b>declarative and reviewable</b>. The plugin is <b>programmable and testable</b>. Every guardrail you ship should be as far toward the first as it can go, and no further.
 </div>
+
+<div class="footnote mt-3">On Claude Code or Pi instead? The same policy, wired their way, is in the appendix.</div>
 
 </div>
 <div>
@@ -1025,126 +1027,11 @@ The denied calls aren't in your audit log. Is that the right design? What would 
 -->
 
 ---
-
-# Same guardrail, Claude Code <span class="text-base op-50">optional</span>
-
-<span class="eyebrow eyebrow--oc"><b>Exercise 1 · Portability</b> — out-of-process, exit codes</span>
-
-<div class="grid grid-cols-2 gap-7 pt-1">
-<div>
-
-Claude Code spawns a program and speaks JSON over stdin. Any language works:
-
-```python
-#!/usr/bin/env python3
-"""PreToolUse guardrail. Register in .claude/settings.json."""
-import json, re, sys
-
-DANGEROUS = [
-    (r"\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)", "rm -rf"),
-    (r"\bgit\s+push\b.*(--force|-f)\b",         "force push"),
-    (r"\.env\b",                                 "touching .env"),
-]
-
-data = json.load(sys.stdin)
-if data.get("tool_name") == "Bash":
-    cmd = (data.get("tool_input") or {}).get("command", "")
-    for pattern, reason in DANGEROUS:
-        if re.search(pattern, cmd, re.IGNORECASE):
-            print(f"Blocked by policy: {reason}.", file=sys.stderr)
-            sys.exit(2)     # 2 blocks. 1 does NOT.
-sys.exit(0)
-```
-
-</div>
-<div>
-
-<div class="card card--deny mb-3">
-<span class="card-title">The footgun</span>
-Only <code>exit 2</code> blocks. <code>exit 1</code> is a non-blocking error and the tool <b>still runs</b> — and an unhandled Python exception exits 1. A crashing guard fails <i>open</i>.<br><br>
-OpenCode has no equivalent: a thrown error is a thrown error.
-</div>
-
-<div class="card card--allow mb-3">
-<span class="card-title">What you gain</span>
-Process isolation, any language, and a richer verdict set — <code>allow</code>, <code>deny</code>, <code>ask</code>, <code>defer</code> via JSON on stdout, with precedence <b>deny &gt; defer &gt; ask &gt; allow</b>. The <code>ask</code> that OpenCode puts in config, Claude Code puts in the hook.
-</div>
-
-<div class="card">
-<span class="card-title">What you lose</span>
-A process spawn per tool call, and no easy rewrite — mutating input means returning <code>updatedInput</code> JSON rather than assigning to a variable.
-</div>
-
-</div>
-</div>
-
-<!--
-~90s. Two families: out-of-process JSON and exit codes (Claude Code, Codex CLI adopted the same wire protocol almost verbatim) vs in-process TypeScript (OpenCode, Pi). Same policy table, different spelling. Ask the room which failure mode they'd rather own — a crashed subprocess that fails open, or a crashed plugin that takes the harness with it.
--->
-
----
-
-# Same guardrail, Pi <span class="text-base op-50">optional</span>
-
-<span class="eyebrow eyebrow--oc"><b>Exercise 1 · Portability</b> — in-process, return values</span>
-
-<div class="grid grid-cols-2 gap-7 pt-1">
-<div>
-
-Pi loads extensions from `.pi/extensions/` — one default-exported function wiring into `pi.on(...)`:
-
-```ts
-// .pi/extensions/guard.ts
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-
-const DENY: [RegExp, string][] = [
-  [/\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)/i, "rm -rf"],
-  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
-  [/\.env\b/, "touching .env"],
-];
-
-export default function (pi: ExtensionAPI) {
-  pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName !== "bash") return;
-    const cmd = String(event.input.command ?? "");
-    for (const [re, why] of DENY)
-      if (re.test(cmd))
-        return { block: true, reason: `Blocked by policy: ${why}.` };
-  });
-}
-```
-
-</div>
-<div>
-
-<div class="card card--allow mb-3">
-<span class="card-title">The verdict is a return value</span>
-<code>{ block: true, reason }</code> — no exit codes, no throwing, no stdout parsing. Arguably the cleanest of the three.
-</div>
-
-<div class="card card--deny mb-3">
-<span class="card-title">Worth stealing: it fails <i>closed</i></span>
-A crashing <code>tool_call</code> hook <b>blocks</b> the tool. The opposite of Claude Code's exit-1, and the opposite of most defaults.
-</div>
-
-<div class="card card--oc">
-<span class="card-title">Three harnesses, one policy table</span>
-The regexes never changed across these slides. That's the portable part — <b>the wiring is the only thing you rewrite</b>, which is a good argument for keeping policy in data.
-</div>
-
-</div>
-</div>
-
-<!--
-~60s. Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
--->
-
----
 layout: center
 class: text-center
 ---
 
-# Exercise 2 · Ship a tool via MCP
+# Exercise 2 · Build an MCP server
 
 <span class="op-60">≈ 20 min · now that the cage exists, build something to put in it</span>
 
@@ -1171,7 +1058,7 @@ Let your audit plugin tell you what OpenCode actually named your tools.
 
 ---
 
-# Two tools, and the shape of a contract
+# Defining the tools
 
 <span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — the server <Steps n="1" total="4" /></span>
 
@@ -1216,7 +1103,7 @@ Three ideas from the talk, live in the code: the <b>docstring is the tool descri
 
 ---
 
-# The destructive one earns its own slide
+# The destructive tool
 
 <span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — the server <Steps n="2" total="4" /></span>
 
@@ -1271,7 +1158,7 @@ If a tool can destroy something, its description should say so in the first sent
 
 ---
 
-# Register it, then let your audit log name it
+# Registering the server
 
 <span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — the client side <Steps n="3" total="4" /></span>
 
@@ -1305,7 +1192,7 @@ Restart OpenCode, then ask:
 <div>
 
 <div class="card card--allow mb-3">
-<span class="card-title">Now read your own audit log</span>
+<span class="card-title">Read your audit log</span>
 <code>cat .opencode/audit.log</code> — the <code>tool</code> field has the real names. MCP tools are registered as <code>&lt;server&gt;_&lt;tool&gt;</code>, so yours are:<br><br>
 <code>tickets_list_tickets</code><br>
 <code>tickets_create_ticket</code><br>
@@ -1313,7 +1200,7 @@ Restart OpenCode, then ask:
 </div>
 
 <div class="card card--oc mb-3">
-<span class="card-title">Don't take my word for it</span>
+<span class="card-title">Verify it yourself</span>
 Prefixes differ between harnesses — Claude Code uses <code>mcp__tickets__delete_ticket</code> for the same tool. <b>Read the name out of your log</b> rather than trusting a slide. Exercise 3 needs it exactly right.
 </div>
 
@@ -1328,7 +1215,7 @@ Prefixes differ between harnesses — Claude Code uses <code>mcp__tickets__delet
 
 ---
 
-# Checkpoint, and the tools/resources distinction
+# Checkpoint and stretch
 
 <span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — verify <Steps n="4" total="4" /></span>
 
@@ -1374,9 +1261,9 @@ def open_tickets() -> str:
 
 ---
 
-# Polyglot corner — TypeScript <span class="text-base op-50">optional</span>
+# The same server in TypeScript <span class="text-base op-50">optional</span>
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2 · Portability</b></span>
+<span class="eyebrow eyebrow--mcp"><b>Exercise 2 · Other languages</b></span>
 
 The protocol is the contract; the language is your choice. Same server on the official TS SDK (`npm i @modelcontextprotocol/sdk zod`):
 
@@ -1428,9 +1315,9 @@ await server.connect(new StdioServerTransport());
 
 ---
 
-# Polyglot corner — Rust <span class="text-base op-50">optional</span>
+# The same server in Rust <span class="text-base op-50">optional</span>
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2 · Portability</b></span>
+<span class="eyebrow eyebrow--mcp"><b>Exercise 2 · Other languages</b></span>
 
 Official `rmcp` crate (`cargo add rmcp -F server,transport-io schemars serde serde_json tokio -F tokio/full`):
 
@@ -1492,7 +1379,7 @@ layout: center
 class: text-center
 ---
 
-# Exercise 3 · Compose
+# Exercise 3 · Guarding your own tools
 
 <span class="op-60">≈ 10 min · the payoff for doing control first</span>
 
@@ -1510,7 +1397,7 @@ So the question isn't <i>whether</i> you can gate <code>tickets_delete_ticket</c
 
 ---
 
-# Two ways to gate it. Pick deliberately.
+# Two ways to gate it
 
 <span class="eyebrow eyebrow--allow"><b>Exercise 3</b> — config or plugin?</span>
 
@@ -1575,9 +1462,9 @@ The permission rule is a <b>client-side human gate</b>. The <code>protected</cod
 
 ---
 
-# Why both locks? <span class="text-base op-50">Discuss · 3 min</span>
+# Client-side and server-side <span class="text-base op-50">Discuss · 3 min</span>
 
-<span class="eyebrow eyebrow--allow"><b>Exercise 3</b> — defense in depth, made concrete</span>
+<span class="eyebrow eyebrow--allow"><b>Exercise 3</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-3">
 <div>
@@ -1615,9 +1502,9 @@ Which of your two locks survives an attacker who can edit files in the repo?<br>
 
 ---
 
-# Bonus · Red team your own setup <span class="text-base op-50">≈ 10 min</span>
+# Bonus · Red team it <span class="text-base op-50">≈ 10 min</span>
 
-<span class="eyebrow eyebrow--deny">Tool results are untrusted input. Prove it to yourself.</span>
+<span class="eyebrow eyebrow--deny">Tool results are untrusted input.</span>
 
 <div class="grid grid-cols-2 gap-7 pt-2">
 <div>
@@ -1642,7 +1529,7 @@ Creating it is harmless. It's just data — until something reads it.
 <div>
 
 <div class="card card--ask mb-3">
-<span class="card-title">Three holes to go find</span>
+<span class="card-title">Three holes to find</span>
 <b>The subagent path.</b> Does your plugin fire for tools called inside a <code>task</code>-spawned subagent? Test it — don't assume. Subagents also have their own permission overrides.<br><br>
 <b>The rewrite you can't see.</b> Your <code>--no-verify</code> stripper edits a command the model believes it wrote. What happens when it reads the git log and the history disagrees with its memory?<br><br>
 <b>Everything you didn't enumerate.</b> <code>webfetch</code> can exfiltrate a secret in a query string. Is it on your list?
@@ -1664,7 +1551,7 @@ Creating it is harmless. It's just data — until something reads it.
 
 ---
 
-# What you just built — mapped back to the talk
+# What you built
 
 <div class="grid grid-cols-2 gap-7 pt-2">
 <div>
@@ -1679,7 +1566,7 @@ Creating it is harmless. It's just data — until something reads it.
 | Human in the loop | `permission: "ask"` |
 | Config vs. code | Which mechanism, and why |
 | Audit & observability | `audit.ts`, `.opencode/audit.log` |
-| Portability of policy | Claude Code hook, Pi extension |
+| Portability of policy | The appendix ports, unchanged |
 
 </div>
 <div>
@@ -1706,11 +1593,152 @@ Close the loop. Note the split: the left column existed before the right column 
 -->
 
 ---
+layout: center
+class: text-center
+---
+
+# Appendix · Other harnesses
+
+<span class="op-60">The same policy table, in the two other agents people bring to this room</span>
+
+<div class="grid grid-cols-2 gap-5 pt-10 text-left">
+<div class="card">
+<span class="card-title">Claude Code</span>
+Out-of-process programs: JSON on stdin, the verdict as an exit code, and a fourth verdict — <code>ask</code> — that OpenCode keeps in config instead.
+</div>
+<div class="card">
+<span class="card-title">Pi</span>
+In-process TypeScript like OpenCode, but the verdict is a return value, and a crashing hook fails <b>closed</b>.
+</div>
+</div>
+
+<div class="mt-8 text-sm op-60">The regexes never change. Only the wiring does.</div>
+
+<!--
+Use these if someone in the room isn't on OpenCode, or as the answer to "does any of this transfer?". Both slides are self-contained, so you can jump straight to either one.
+-->
+
+---
+
+# The same guard in Claude Code
+
+<span class="eyebrow eyebrow--oc"><b>Appendix</b> — out-of-process, exit codes</span>
+
+<div class="grid grid-cols-2 gap-7 pt-1">
+<div>
+
+Claude Code spawns a program and speaks JSON over stdin. Any language works:
+
+```python
+#!/usr/bin/env python3
+"""PreToolUse guardrail. Register in .claude/settings.json."""
+import json, re, sys
+
+DANGEROUS = [
+    (r"\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)", "rm -rf"),
+    (r"\bgit\s+push\b.*(--force|-f)\b",         "force push"),
+    (r"\.env\b",                                 "touching .env"),
+]
+
+data = json.load(sys.stdin)
+if data.get("tool_name") == "Bash":
+    cmd = (data.get("tool_input") or {}).get("command", "")
+    for pattern, reason in DANGEROUS:
+        if re.search(pattern, cmd, re.IGNORECASE):
+            print(f"Blocked by policy: {reason}.", file=sys.stderr)
+            sys.exit(2)     # 2 blocks. 1 does NOT.
+sys.exit(0)
+```
+
+</div>
+<div>
+
+<div class="card card--deny mb-3">
+<span class="card-title">The footgun</span>
+Only <code>exit 2</code> blocks. <code>exit 1</code> is a non-blocking error and the tool <b>still runs</b> — and an unhandled Python exception exits 1. A crashing guard fails <i>open</i>.<br><br>
+OpenCode has no equivalent: a thrown error is a thrown error.
+</div>
+
+<div class="card card--allow mb-3">
+<span class="card-title">What you gain</span>
+Process isolation, any language, and a richer verdict set — <code>allow</code>, <code>deny</code>, <code>ask</code>, <code>defer</code> via JSON on stdout, with precedence <b>deny &gt; defer &gt; ask &gt; allow</b>. The <code>ask</code> that OpenCode puts in config, Claude Code puts in the hook.
+</div>
+
+<div class="card">
+<span class="card-title">What you lose</span>
+A process spawn per tool call, and no easy rewrite — mutating input means returning <code>updatedInput</code> JSON rather than assigning to a variable.
+</div>
+
+</div>
+</div>
+
+<!--
+~90s. Two families: out-of-process JSON and exit codes (Claude Code, Codex CLI adopted the same wire protocol almost verbatim) vs in-process TypeScript (OpenCode, Pi). Same policy table, different spelling. Ask the room which failure mode they'd rather own — a crashed subprocess that fails open, or a crashed plugin that takes the harness with it.
+-->
+
+---
+
+# The same guard in Pi
+
+<span class="eyebrow eyebrow--oc"><b>Appendix</b> — in-process, return values</span>
+
+<div class="grid grid-cols-2 gap-7 pt-1">
+<div>
+
+Pi loads extensions from `.pi/extensions/` — one default-exported function wiring into `pi.on(...)`:
+
+```ts
+// .pi/extensions/guard.ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)/i, "rm -rf"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+];
+
+export default function (pi: ExtensionAPI) {
+  pi.on("tool_call", async (event, ctx) => {
+    if (event.toolName !== "bash") return;
+    const cmd = String(event.input.command ?? "");
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        return { block: true, reason: `Blocked by policy: ${why}.` };
+  });
+}
+```
+
+</div>
+<div>
+
+<div class="card card--allow mb-3">
+<span class="card-title">The verdict is a return value</span>
+<code>{ block: true, reason }</code> — no exit codes, no throwing, no stdout parsing. Arguably the cleanest of the three.
+</div>
+
+<div class="card card--deny mb-3">
+<span class="card-title">It fails closed</span>
+A crashing <code>tool_call</code> hook <b>blocks</b> the tool. The opposite of Claude Code's exit-1, and the opposite of most defaults.
+</div>
+
+<div class="card card--oc">
+<span class="card-title">What actually ported</span>
+The regexes never changed across these slides. That's the portable part — <b>the wiring is the only thing you rewrite</b>, which is a good argument for keeping policy in data.
+</div>
+
+</div>
+</div>
+
+<!--
+~60s. Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
+-->
+
+---
 layout: end
 class: text-center
 ---
 
-# Thanks — now go guard something
+# Thanks
 
 **Further reading**
 
