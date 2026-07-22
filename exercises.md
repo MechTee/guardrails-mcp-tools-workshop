@@ -1,38 +1,38 @@
 # Hands-on: Guardrails, MCP & Tools in Agentic Engineering
 
-**Total time:** ≈ 60–75 min (+10 min bonus) · **Format:** solo or pairs · **Agent:** OpenCode
+**Agent:** OpenCode
 
 You will build the architecture from the last slide of the talk, on your own machine — **control first, then capability**:
 
-1. **Exercise 1 — Plugins (≈ 30 min):** one TypeScript file, three powers. Deny a destructive command by throwing, rewrite a dangerous one into a safe one, and observe everything that runs. Plus the layer you *don't* write code for.
-2. **Exercise 2 — Build an MCP server (≈ 20 min):** a ticket-tracker MCP server OpenCode discovers and calls.
-3. **Exercise 3 — Guarding your own tools (≈ 10 min):** gate your own MCP tools, twice, by two different mechanisms.
-4. **Bonus — Red team it (≈ 10 min):** smuggle a prompt injection into a ticket, then go find the holes your guardrails still have.
+1. **Part 1 — Plugins:** one TypeScript file, three powers. Deny a destructive command by throwing, rewrite a dangerous one into a safe one, and observe everything that runs. Plus the layer you *don't* write code for.
+2. **Part 2 — Build an MCP server:** a ticket-tracker MCP server OpenCode discovers and calls.
+3. **Part 3 — Guarding your own tools:** gate your own MCP tools, twice, by two different mechanisms.
+4. **Bonus — Red team it:** smuggle a prompt injection into a ticket, then go find the holes your guardrails still have.
 
-Plugins come first on purpose. In OpenCode a guardrail is a single TypeScript file with no protocol to get wrong, so you get working enforcement in the first twenty minutes — and everything you build afterwards lands inside a cage that already exists.
+Plugins come first on purpose. In OpenCode a guardrail is a single TypeScript file with no protocol to get wrong, so you get working enforcement quickly — and everything you build afterwards lands inside a cage that already exists.
 
 > **Using a different agent?** The concepts transfer, and this handout includes ports: the same guard as a Claude Code hook and a Pi extension in the appendix, and the server in TypeScript and Rust in §2.4.
 
 ---
 
-## Exercise 0 — Setup (≈ 5 min)
+## Part 0 — Setup
 
-**Prerequisites:** OpenCode installed and authenticated, `git`, and Python 3.10+ for Exercise 2.
+**Prerequisites:** OpenCode installed and authenticated, `git`, and Python 3.10+ for Part 2.
 
-### For Exercise 1 (plugins) — needed now
+### For Part 1 (plugins) — needed now
 
 ```bash
 mkdir agent-guardrails-lab && cd agent-guardrails-lab
 git init                      # cheap safety net: inspect/undo anything via git
 mkdir -p .opencode/plugins
 
-# bait: you'll protect this in Exercise 1, then attack it in the bonus
+# bait: you'll protect this in Part 1, then attack it in the bonus
 echo "SECRET_API_KEY=do-not-leak-me" > .env
 ```
 
 No Node or Bun install is needed. OpenCode bundles a Bun runtime and loads `.ts` files from the plugin directory directly.
 
-### For Exercise 2 (MCP) — start it now, you'll use it in ~30 min
+### For Part 2 (MCP) — start it now
 
 ```bash
 python3 -m venv .venv
@@ -46,7 +46,7 @@ The `<2` pin matters: v2 of the MCP Python SDK is a pre-release with a different
 
 ---
 
-## Exercise 1 — Plugins (≈ 30 min)
+## Part 1 — Plugins
 
 **Goal:** deterministic policy-as-code. The model can ignore an instruction in your prompt. It cannot ignore a plugin.
 
@@ -237,7 +237,7 @@ export const Audit: Plugin = async ({ directory }) => {
 
 Truncating the result is a design choice: an audit log needs enough to reconstruct a decision, not a second copy of the transcript.
 
-That `tool` field is also your **discovery tool**. It prints the exact string OpenCode uses for every call, which is how you'll get your MCP tool names right in Exercise 2 instead of guessing at prefixes.
+That `tool` field is also your **discovery tool**. It prints the exact string OpenCode uses for every call, which is how you'll get your MCP tool names right in Part 2 instead of guessing at prefixes.
 
 **A warning worth taking seriously.** Tool arguments contain exactly the secrets you spent §1.2 protecting, and this file sits inside the repo. A real audit plugin redacts before it writes. Would you have gitignored `.opencode/audit.log` without being told?
 
@@ -295,11 +295,11 @@ agent-guardrails-lab/
 
 **Checkpoint:** all five behave as listed, and `.opencode/audit.log` has a line for every call that ran.
 
-**Discuss (2 min):** the last row is denied by the permission config (`"rm *": "deny"`) *and* by your plugin. Which one fired? Permission rules resolve before the tool executes, so the config wins and the plugin never sees the call. Now: the denied calls aren't in your audit log at all. Is that the right design, and what would you show an auditor to prove the block happened?
+**Discuss:** the last row is denied by the permission config (`"rm *": "deny"`) *and* by your plugin. Which one fired? Permission rules resolve before the tool executes, so the config wins and the plugin never sees the call. Now: the denied calls aren't in your audit log at all. Is that the right design, and what would you show an auditor to prove the block happened?
 
 ---
 
-## Exercise 2 — Build an MCP server (≈ 20 min)
+## Part 2 — Build an MCP server
 
 **Goal:** the full loop — define tools, expose them over MCP, and watch the agent discover and use them. The cage already exists; now you build something to put in it.
 
@@ -354,7 +354,7 @@ if __name__ == "__main__":
     mcp.run()   # stdio transport by default
 ```
 
-Notice three talk concepts already in the code: **docstrings are the tool descriptions** (they steer the model), **type hints are the schema**, and **errors are returned as information**, not raised as crashes. `delete_ticket` also does *server-side* validation (protected tickets) — remember that for Exercise 3, where you'll put a second, completely independent lock on the same door.
+Notice three talk concepts already in the code: **docstrings are the tool descriptions** (they steer the model), **type hints are the schema**, and **errors are returned as information**, not raised as crashes. `delete_ticket` also does *server-side* validation (protected tickets) — remember that for Part 3, where you'll put a second, completely independent lock on the same door.
 
 ### 2.2 Register it in OpenCode
 
@@ -389,7 +389,7 @@ tickets_create_ticket
 tickets_delete_ticket
 ```
 
-**Read the name out of your log rather than trusting this page.** Prefixes differ between harnesses — Claude Code names the same tool `mcp__tickets__delete_ticket` — and Exercise 3 needs it exactly right. Note also that `audit.ts` needed no changes at all to cover MCP: it never filtered by tool name, so the observability layer you built before the server existed is now the thing telling you how to guard it.
+**Read the name out of your log rather than trusting this page.** Prefixes differ between harnesses — Claude Code names the same tool `mcp__tickets__delete_ticket` — and Part 3 needs it exactly right. Note also that `audit.ts` needed no changes at all to cover MCP: it never filtered by tool name, so the observability layer you built before the server existed is now the thing telling you how to guard it.
 
 **Checkpoint:** the agent lists 2 tickets, creates a third, lists 3 — and all of it appears in `.opencode/audit.log` under `tickets_*`.
 
@@ -497,7 +497,7 @@ Register the release binary the same way: `"command": ["./target/release/tickets
 
 ---
 
-## Exercise 3 — Guarding your own tools (≈ 10 min)
+## Part 3 — Guarding your own tools
 
 **Goal:** discover that your MCP tools are just tools, and then decide *which* mechanism should gate them.
 
@@ -528,7 +528,7 @@ if (input.tool === "tickets_delete_ticket") {
 
 Programmable: it can read the argument, query a database, check the time of day. Use it when a pattern genuinely can't express the rule.
 
-Most rooms reach straight for Option B because they've just spent thirty minutes writing TypeScript. Push back on that instinct: a config line a security reviewer can read beats a plugin branch they have to trust, and only the config can produce an approval prompt.
+Most rooms reach straight for Option B because they've just written a plugin. Push back on that instinct: a config line a security reviewer can read beats a plugin branch they have to trust, and only the config can produce an approval prompt.
 
 ### 3.3 Test it
 
@@ -540,7 +540,7 @@ Most rooms reach straight for Option B because they've just spent thirty minutes
 
 **Checkpoint:** deletes prompt for approval, ticket 2 survives *even when you approve*, and every call is in `.opencode/audit.log`.
 
-### 3.4 Discuss (3 min) — client-side and server-side
+### 3.4 Discuss — client-side and server-side
 
 Ticket 2 was protected twice, by two mechanisms that don't know the other exists: your permission rule is a **client-side human gate**, and the `protected` flag is a **server-side domain rule**.
 
@@ -553,7 +553,7 @@ Final question: which of your two locks survives an attacker who can edit files 
 
 ---
 
-## Bonus — Red team it (≈ 10 min)
+## Bonus — Red team it
 
 Tool results are untrusted input. Prove it to yourself.
 
@@ -579,7 +579,7 @@ Outcomes vary by model mood, and that variance *is* the lesson: probabilistic ju
 
 ## What you built
 
-**Control (Exercise 1)**
+**Control (Part 1)**
 
 | Concept from the slides | Where you touched it |
 |---|---|
@@ -592,7 +592,7 @@ Outcomes vary by model mood, and that variance *is* the lesson: probabilistic ju
 | Portability of policy | Claude Code hook, Pi extension |
 | A guardrail that never fires | `permission.ask` |
 
-**Capability (Exercises 2 & 3)**
+**Capability (Parts 2 & 3)**
 
 | Concept from the slides | Where you touched it |
 |---|---|

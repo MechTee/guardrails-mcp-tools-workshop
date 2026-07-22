@@ -7,7 +7,6 @@ info: |
   ## Guardrails, MCP & Tools in Agentic Engineering
   Giving coding agents real capabilities — and keeping them on the rails.
 
-  ≈ 12 minutes of theory · then 60–75 minutes of hands-on exercises.
 class: text-center
 drawings:
   persist: false
@@ -25,10 +24,8 @@ Giving coding agents real capabilities — and keeping them on the rails.
 <div class="p-4 rounded-lg bg-white/10">🛡️ <b>Guardrails</b><br><span class="op-70">What an agent <i>may</i> do</span></div>
 </div>
 
-<div class="abs-br m-6 text-sm op-60">≈ 12 min of theory · then hands-on</div>
-
 <!--
-Welcome (60s). Frame: agentic engineering means the model doesn't just write code, it acts — runs commands, edits files, calls services. Today: three pillars. Tools = capability. MCP = the standard way to plug capabilities in. Guardrails = control over what actually happens. Theory ~12 min, then everything gets built by hand in the exercises.
+Frame: agentic engineering means the model doesn't just write code, it acts — runs commands, edits files, calls services. Today: three pillars. Tools = capability. MCP = the standard way to plug capabilities in. Guardrails = control over what actually happens. Theory then everything gets built by hand in the parts.
 -->
 
 ---
@@ -62,10 +59,10 @@ flowchart TB
 </div>
 </div>
 
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">Tools decide what the loop can touch. Guardrails decide what each pass of the loop is allowed to do.</div>
+<div class="abs-b mx-14 mb-6 text-sm italic op-60">Tools decide what the loop can touch. Guardrails decide what it may do.</div>
 
 <!--
-~70s. Walk the diagram clockwise: the model proposes, the harness disposes. Key sentence: the model never executes anything itself — the runtime does, which is exactly where we can intervene. Left side sets up the tension of the talk: capability (tools, MCP) vs. control (guardrails).
+Walk the diagram clockwise: the model proposes, the harness disposes. Key sentence: the model never executes anything itself — the runtime does, which is exactly where we can intervene. Left side sets up the tension of the talk: capability (tools, MCP) vs. control (guardrails).
 -->
 
 ---
@@ -115,7 +112,7 @@ model call → validate → execute → observe
 <div class="abs-b mx-14 mb-6 text-sm italic op-60">The model is your API consumer — write descriptions the way you'd want an intern briefed.</div>
 
 <!--
-~80s. Demystify: a tool is just JSON schema + a docstring. Point at the description — it says when NOT to use the tool, which prevents most misuse. Bottom strip: the runtime, not the model, validates and executes — the runtime is our control point.
+Demystify: a tool is just JSON schema + a docstring. Point at the description — it says when NOT to use the tool, which prevents most misuse. Bottom strip: the runtime, not the model, validates and executes — the runtime is our control point.
 -->
 
 ---
@@ -124,35 +121,52 @@ model call → validate → execute → observe
 
 <span class="text-sm op-60">Pillar 1 · Tools</span>
 
-<div class="grid grid-cols-2 gap-4 pt-4">
+<div class="grid grid-cols-2 gap-8 pt-3">
+<div>
 
-<div class="p-4 rounded-lg bg-blue-500/10">
-<b>📄 Descriptions are prompts</b><br>
-<span class="text-sm op-80">Spell out when to use it — and when not to. Vague docs produce vague, wrong calls.</span>
-</div>
+```python
+@mcp.tool()                              # 2
+def create_ticket(title: str) -> dict:   # 3
+    """Create a NEW ticket.
+    Not for editing existing ones."""    # 1
 
-<div class="p-4 rounded-lg bg-teal-500/10">
-<b>🎚️ Small, sharp surface</b><br>
-<span class="text-sm op-80">A few orthogonal tools beat forty overlapping ones. Every extra tool costs attention, tokens, and accuracy.</span>
-</div>
-
-<div class="p-4 rounded-lg bg-amber-500/10">
-<b>🧩 Typed in, structured out</b><br>
-<span class="text-sm op-80">Strict schemas reject bad calls before they run; stable output shapes keep the loop predictable.</span>
-</div>
-
-<div class="p-4 rounded-lg bg-red-500/10">
-<b>⚠️ Errors are information</b><br>
-<span class="text-sm op-80">Return actionable messages the model can recover from — "file not found, did you mean..." beats a stack trace.</span>
-</div>
+    if not title:
+        return "Error: title is required."   # 4
+    ...
+```
 
 </div>
+<div>
 
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">Good tool design is prompt engineering with types — and it's half of your guardrail story already.</div>
+<div class="rule">
+<span class="pin">1</span>
+<span class="rule-body"><b>Descriptions are prompts</b><span>Say when not to use it.</span></span>
+</div>
+
+<div class="rule">
+<span class="pin">2</span>
+<span class="rule-body"><b>Small, sharp surface</b><span>Every extra tool costs accuracy.</span></span>
+</div>
+
+<div class="rule">
+<span class="pin">3</span>
+<span class="rule-body"><b>Typed in, structured out</b><span>Schemas reject bad calls early.</span></span>
+</div>
+
+<div class="rule">
+<span class="pin">4</span>
+<span class="rule-body"><b>Errors are information</b><span>Return something the model can act on.</span></span>
+</div>
+
+</div>
+</div>
+
+<div class="abs-b mx-14 mb-6 text-sm italic op-60">Tool design is prompt engineering with types.</div>
 
 <!--
-~70s. One beat per card. Emphasize card 2: context is a budget; tool definitions compete with the actual task. And card 4: an agent that gets a good error self-corrects; one that gets a stack trace flails. Segue: writing one tool is easy — wiring tools into every agent is the real pain. Enter MCP.
+One beat per rule, each pinned to the line it governs. Emphasise 2 — context is a budget, and tool definitions compete with the actual task. And 4 — an agent that gets a good error self-corrects; one that gets a stack trace flails. Segue: writing one tool is easy, wiring tools into every agent is the pain.
 -->
+
 
 ---
 
@@ -160,12 +174,12 @@ model call → validate → execute → observe
 
 <span class="text-sm op-60">Pillar 2 · MCP</span>
 
-<div class="grid grid-cols-2 gap-6 pt-2">
+<div class="grid grid-cols-2 gap-6 pt-1">
 <div class="text-center">
 
 **Without MCP**
 
-```mermaid {scale: 0.45}
+```mermaid {scale: 0.78}
 flowchart LR
   CC[Claude Code] --- GH[GitHub]
   CC --- DB[(Database)]
@@ -178,14 +192,14 @@ flowchart LR
   APP --- SL
 ```
 
-<span class="text-xs op-60">3 × 3 = <b>9</b> bespoke integrations</span>
+<span class="text-sm op-70">3 × 3 = <b>9</b> integrations</span>
 
 </div>
 <div class="text-center">
 
 **With MCP**
 
-```mermaid {scale: 0.45}
+```mermaid {scale: 0.78}
 flowchart LR
   CC[Claude Code] --- M{{MCP}}
   IDE[IDE agent] --- M
@@ -195,17 +209,15 @@ flowchart LR
   M --- SL[Slack]
 ```
 
-<span class="text-xs op-60">3 + 3 = <b>6</b> adapters — build once, plug in anywhere</span>
+<span class="text-sm op-70">3 + 3 = <b>6</b> adapters</span>
 
 </div>
 </div>
 
-<div class="abs-b mx-14 mb-6 text-sm op-70">
-<b>Model Context Protocol</b> — an open standard (Anthropic, Nov 2024) built on JSON-RPC 2.0, now supported across major agents and IDEs. Think <i>"USB-C for AI capabilities"</i>: one port instead of a drawer full of adapters.
-</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">One port instead of a drawer full of adapters.</div>
 
 <!--
-~70s. The M-by-N argument sells itself visually: left is the world of bespoke plugins, right is one protocol in the middle. Mention adoption breadth (it outgrew Anthropic — other major vendors adopted it in 2025), then move on: the interesting part is the architecture.
+The M-by-N argument sells itself visually: left is the world of bespoke plugins, right is one protocol in the middle. Mention adoption breadth (it outgrew Anthropic — other major vendors adopted it in 2025), then move on: the interesting part is the architecture.
 -->
 
 ---
@@ -214,25 +226,25 @@ flowchart LR
 
 <span class="text-sm op-60">Pillar 2 · MCP</span>
 
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.8}
 flowchart LR
-  subgraph host["Host · Claude Code / IDE  (+ permissions, hooks)"]
+  subgraph host["Host · agent + guardrails"]
     A["Agent (model)"] <--> C["MCP client"]
   end
-  C <-- "stdio · local" --> T["tickets — your server<br>≈40 lines of Python"]
-  C <-- "HTTP · remote" --> G["GitHub — someone<br>else's server"]
+  C <-- "stdio · local" --> T["tickets<br>your server"]
+  C <-- "HTTP · remote" --> G["GitHub<br>someone else's"]
 ```
 
-<div class="grid grid-cols-3 gap-4 pt-2 text-sm">
-<div class="p-3 rounded-lg bg-blue-500/10"><b>🔧 Tools</b><br><span class="op-80">Model-controlled actions with side effects — <code>create_ticket</code>, <code>run_query</code>.</span></div>
-<div class="p-3 rounded-lg bg-teal-500/10"><b>🗄️ Resources</b><br><span class="op-80">Read-only context the app can attach — <code>tickets://open</code>, file contents.</span></div>
-<div class="p-3 rounded-lg bg-purple-500/10"><b>✨ Prompts</b><br><span class="op-80">Reusable templates the user invokes — slash-command style workflows.</span></div>
+<div class="grid grid-cols-3 gap-4 pt-1 text-sm">
+<div class="card"><span class="card-title">🔧 Tools</span>Actions the model calls.</div>
+<div class="card"><span class="card-title">🗄️ Resources</span>Context the app attaches.</div>
+<div class="card"><span class="card-title">✨ Prompts</span>Templates the user invokes.</div>
 </div>
 
-<div class="abs-b mx-14 mb-5 text-sm op-70">In Claude Code a server's tools surface as <code>mcp__tickets__create_ticket</code> — a handle you can permission, allowlist, and hook.</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Tools surface under the server's name — if you can name it, you can gate it.</div>
 
 <!--
-~90s. Host runs a client per server; transports: stdio for local processes, streamable HTTP for remote. Three primitives — tools act, resources inform, prompts template. Land the footnote hard: the mcp__server__tool naming is the bridge to guardrails; if you can name it, you can gate it.
+Host runs a client per server; transports: stdio for local processes, streamable HTTP for remote. Three primitives — tools act, resources inform, prompts template. Land the footnote hard: the mcp__server__tool naming is the bridge to guardrails; if you can name it, you can gate it.
 -->
 
 ---
@@ -270,7 +282,7 @@ flowchart LR
 </div>
 
 <!--
-~80s. These are failure modes, not hypotheticals — most of the audience has seen at least one. Spend the extra beat on prompt injection: it flips the trust model, because attack payloads arrive through tool RESULTS, not the user. The callout is the 'lethal trifecta' framing: data + injection + action = exfiltration.
+These are failure modes, not hypotheticals — most of the audience has seen at least one. Spend the extra beat on prompt injection: it flips the trust model, because attack payloads arrive through tool RESULTS, not the user. The callout is the 'lethal trifecta' framing: data + injection + action = exfiltration.
 -->
 
 ---
@@ -279,24 +291,29 @@ flowchart LR
 
 <span class="text-sm op-60">Pillar 3 · Guardrails</span>
 
-<v-clicks>
+<div class="layers pt-3">
+<div class="layer layer--l5">
+<span class="layer-name">✅ Verification</span><span class="layer-note">was the output any good?</span>
+<div class="layer layer--l4">
+<span class="layer-name">🙋 Human approval</span><span class="layer-note">irreversible things</span>
+<div class="layer layer--l3">
+<span class="layer-name">📦 Sandbox</span><span class="layer-note">caps the blast radius</span>
+<div class="layer layer--l2">
+<span class="layer-name">🪝 Plugins &amp; hooks</span><span class="layer-note">policy as code</span>
+<div class="layer layer--l1">
+<span class="layer-name">🔒 Permissions</span><span class="layer-note">what it may touch at all</span>
+<div class="layer-core">the tool call</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 
-- 🔒 **Permissions & allowlists** — which tools, paths, and domains the agent may touch at all; least privilege as the default posture.
-
-- 🪝 **Hooks — policy as code** — deterministic checks that run before and after every action; *the layer we build in the exercises.*
-
-- 📦 **Sandboxing & isolation** — containers, throwaway worktrees, and network egress rules cap the blast radius when something slips.
-
-- 🙋 **Human-in-the-loop** — approval gates for irreversible or high-stakes operations: deletes, deploys, payments, sending mail.
-
-- ✅ **Verification** — tests, reviewer agents, and rubrics judge the output itself, catching what no input filter can.
-
-</v-clicks>
-
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">Prompting is a suggestion. Guardrails are enforcement — the model can't talk its way past a hook.</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Prompting is a suggestion. These are enforcement.</div>
 
 <!--
-~70s. Read top to bottom as distance from the model: what it may call, checks around each call, where the call runs, who signs off, and whether the result is any good. No single layer suffices; each catches what the others miss. Next slide zooms into layer two, hooks, because it's the most programmable.
+Read outward from the call: what it may touch, checks around it, where it runs, who signs off, whether the result is any good. No single layer suffices — each catches what the others miss. Next slide zooms into the two innermost, because those are the programmable ones.
 -->
 
 ---
@@ -344,10 +361,10 @@ export const Guard: Plugin = async () => ({
 </div>
 </div>
 
-<div class="abs-b mx-14 mb-5 text-sm italic op-60">Both layers sit below the model: this is enforcement, not advice. Neither can be argued with.</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Both sit below the model. This is enforcement, not advice.</div>
 
 <!--
-~90s. Top: where your code runs, in order — permission rules resolve first, then the plugin sees whatever survived. Left: the two-layer split is the single most useful idea in this deck, because most teams write a plugin for something a two-line config rule would have handled. Right: the whole protocol is a function that throws. Close on: enforcement below the model.
+Top: where your code runs, in order — permission rules resolve first, then the plugin sees whatever survived. Left: the two-layer split is the single most useful idea in this deck, because most teams write a plugin for something a two-line config rule would have handled. Right: the whole protocol is a function that throws. Close on: enforcement below the model.
 -->
 
 ---
@@ -388,10 +405,10 @@ export const Guard: Plugin = async () => ({
 
 </div>
 
-<div class="abs-b mx-14 mb-5 text-sm italic op-60">Two families: in-process TypeScript, where you throw or rewrite (OpenCode, Pi) vs out-of-process JSON + exit codes (Claude Code, Codex CLI, which adopted the same wire protocol). Same guardrail, four spellings.</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Two families: in-process TypeScript, or out-of-process JSON and exit codes. Same guardrail, four spellings.</div>
 
 <!--
-~70s. The portability slide. Left pair: external scripts, language-agnostic, JSON over stdin, exit 2 blocks — Codex CLI converged on Claude Code's protocol almost verbatim, so one guard script serves both. Right pair: in-process TypeScript with richer power (mutate args, register tools) but runtime lock-in. Point at the two failure philosophies: Claude Code's exit 1 fails open, Pi's crashing hook fails closed — ask the room which default they'd ship.
+The portability slide. Left pair: external scripts, language-agnostic, JSON over stdin, exit 2 blocks — Codex CLI converged on Claude Code's protocol almost verbatim, so one guard script serves both. Right pair: in-process TypeScript with richer power (mutate args, register tools) but runtime lock-in. Point at the two failure philosophies: Claude Code's exit 1 fails open, Pi's crashing hook fails closed — ask the room which default they'd ship.
 -->
 
 ---
@@ -418,10 +435,10 @@ flowchart LR
   O -->|"result (untrusted)"| A
 ```
 
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">Config decides first, then your code — and a rewrite is a third option between yes and no. Audit on the way out, and every result re-enters context as untrusted input.</div>
+<div class="abs-b mx-14 mb-6 text-sm italic op-60">Config decides first, then your code. Every result re-enters context as untrusted input.</div>
 
 <!--
-~60s. Trace one request left to right: model proposes, the gate decides (allow / ask / deny with a reason the model can act on), execution happens inside an isolated boundary, and the observer logs everything on the way back. Whatever comes back re-enters the context as untrusted input. This exact shape is what they build next.
+Trace one request left to right: model proposes, the gate decides (allow / ask / deny with a reason the model can act on), execution happens inside an isolated boundary, and the observer logs everything on the way back. Whatever comes back re-enters the context as untrusted input. This exact shape is what they build next.
 -->
 
 ---
@@ -441,11 +458,11 @@ flowchart LR
 </v-clicks>
 
 <div class="mt-8 card card--hook">
-🏋️ <b>Up next: hands-on.</b> 60–75 minutes — you build the guardrails <i>first</i> in OpenCode, then a tool server to put behind them, then you try to break your own setup.
+🏋️ <b>Up next: hands-on.</b> You build the guardrails <i>first</i> in OpenCode, then a tool server to put behind them, then you try to break your own setup.
 </div>
 
 <!--
-~40s. Read the five, don't elaborate — each one maps to something they're about to do with their hands. Then move into the exercise slides.
+Read the five, don't elaborate — each one maps to something they're about to do with their hands. Then move into the part slides.
 -->
 
 ---
@@ -455,47 +472,47 @@ class: text-center
 
 # What you'll build
 
-<span class="op-60">Hands-on · ≈ 60–75 min · solo or pairs · agent: <b>OpenCode</b></span>
+<span class="op-60">Agent: <b>OpenCode</b></span>
 
 <div class="grid grid-cols-3 gap-4 pt-8 text-left">
 <div class="card card--oc">
-<span class="eyebrow eyebrow--oc">Exercise 1 · ≈ 30 min</span>
+<span class="eyebrow eyebrow--oc">Part 1 · </span>
 <span class="card-title">Plugins</span>
 One TypeScript file, three powers: <b>deny</b> a destructive command, <b>rewrite</b> a dangerous one into a safe one, <b>observe</b> everything that runs.
 </div>
 <div class="card card--mcp">
-<span class="eyebrow eyebrow--mcp">Exercise 2 · ≈ 20 min</span>
+<span class="eyebrow eyebrow--mcp">Part 2 · </span>
 <span class="card-title">Build an MCP server</span>
 A ticket-tracker server OpenCode discovers and calls. Python, with TypeScript and Rust ports.
 </div>
 <div class="card card--allow">
-<span class="eyebrow eyebrow--allow">Exercise 3 · ≈ 10 min</span>
+<span class="eyebrow eyebrow--allow">Part 3 · </span>
 <span class="card-title">Guard your own tools</span>
 Gate your own MCP tools — twice, by two different mechanisms, for two different reasons.
 </div>
 </div>
 
 <div class="mt-5 card card--deny text-left">
-<span class="card-title">🐛 Bonus · Red team your own setup · ≈ 10 min</span>
+<span class="card-title">🐛 Bonus · Red team your own setup · </span>
 Hide a prompt injection inside a ticket, then find the hole your guardrails still have.
 </div>
 
-<div class="mt-4 text-xs op-50">Different agent? The same guard as a <b>Claude Code hook</b> and a <b>Pi extension</b> is in the appendix at the end; the server in <b>TypeScript</b> and <b>Rust</b> sits with Exercise 2.</div>
+<div class="mt-4 text-xs op-50">Different agent? The same guard as a <b>Claude Code hook</b> and a <b>Pi extension</b> is in the appendix at the end; the server in <b>TypeScript</b> and <b>Rust</b> sits with Part 2.</div>
 
 <!--
-~40s. Say why plugins come first: control is the thing people skip, and in OpenCode it's a single TypeScript file with no protocol to get wrong. By the time anyone builds a tool in Ex2, the cage already exists.
+Say why plugins come first: control is the thing people skip, and in OpenCode it's a single TypeScript file with no protocol to get wrong. By the time anyone builds a tool in Ex2, the cage already exists.
 -->
 
 ---
 
-# Exercise 0 · Setup <span class="text-base op-50">≈ 5 min</span>
+# Part 0 · Setup
 
 <span class="eyebrow">Do the left column now. Start the right one too — the install takes a while.</span>
 
 <div class="grid grid-cols-2 gap-6 pt-3">
 <div>
 
-<div class="eyebrow eyebrow--oc">Needed for Exercise 1 · plugins</div>
+<div class="eyebrow eyebrow--oc">Needed for Part 1 · plugins</div>
 
 OpenCode installed and authenticated · `git`
 
@@ -515,7 +532,7 @@ Throwaway directory only. Never point a guardrails workshop at a repo you care a
 </div>
 <div>
 
-<div class="eyebrow eyebrow--mcp">Needed for Exercise 2 · MCP</div>
+<div class="eyebrow eyebrow--mcp">Needed for Part 2 · MCP</div>
 
 ```bash
 python3 -m venv .venv
@@ -537,7 +554,7 @@ The <code>&lt;2</code> pin matters: v2 of the MCP Python SDK is a pre-release wi
 <div class="footnote mt-3">No Node or Bun install needed for the plugins — OpenCode bundles a Bun runtime and loads <code>.ts</code> files from the plugin directory directly.</div>
 
 <!--
-Split deliberately: Exercise 1 needs nothing but OpenCode and a directory. Tell people to kick off the venv install and move on — we won't touch it for half an hour. The .env file is bait: protected in Ex1, attacked in the bonus.
+Split deliberately: Part 1 needs nothing but OpenCode and a directory. Tell people to kick off the venv install and move on — we won't touch it for half an hour. The .env file is bait: protected in Ex1, attacked in the bonus.
 -->
 
 ---
@@ -545,9 +562,9 @@ layout: center
 class: text-center
 ---
 
-# Exercise 1 · Plugins
+# Part 1 · Plugins
 
-<span class="op-60">≈ 30 min · policy as code, in-process, in TypeScript</span>
+<span class="op-60"> · policy as code, in-process, in TypeScript</span>
 
 <div class="pt-8">
 <VerdictRail active="deny,rewrite,observe" />
@@ -571,14 +588,14 @@ Every call appended to a JSONL trail you can <code>grep</code>.
 <div class="mt-7 text-sm op-60">One file in <code>.opencode/plugins/</code>. No stdin, no exit codes, no JSON protocol to get wrong.</div>
 
 <!--
-~40s. Frame the arc. Flag the middle one now: rewriting a tool call is the thing OpenCode makes trivial and most harnesses make hard, and it's usually better UX than refusing. Note the missing fourth verdict — "ask" — and promise we'll get to where it actually lives.
+Frame the arc. Flag the middle one now: rewriting a tool call is the thing OpenCode makes trivial and most harnesses make hard, and it's usually better UX than refusing. Note the missing fourth verdict — "ask" — and promise we'll get to where it actually lives.
 -->
 
 ---
 
 # The plugin contract
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="1" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Part 1 · Deny</b> <Steps n="1" total="5" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-2">
 <div>
@@ -610,7 +627,7 @@ export const Guard: Plugin = async (ctx) => {
 
 <div class="card card--deny mb-3">
 <span class="card-title">Blocking means <code>throw</code></span>
-There is no exit code and no decision object. You throw, the call doesn't run, and <b>your error message is what the model sees</b> — so write it for the model.
+No exit code, no decision object. You throw, and <b>your message is what the model reads</b>.
 </div>
 
 <div class="card card--ask mb-3">
@@ -620,21 +637,21 @@ There is no exit code and no decision object. You throw, the call doesn't run, a
 
 <div class="card">
 <span class="card-title">Load order matters</span>
-Global config → project config → global plugins → project plugins, and <b>all hooks run in sequence</b>. Not in parallel — one slow plugin slows every tool call.
+Global config → project config → global plugins → project plugins. Hooks run <b>in sequence</b>, not in parallel.
 </div>
 
 </div>
 </div>
 
 <!--
-~90s, no typing. The contrast worth drawing: Claude Code's hooks are out-of-process programs speaking a JSON-and-exit-code protocol; OpenCode's are in-process TypeScript speaking the language directly. You trade isolation for expressiveness — a crashing plugin is an OpenCode problem, not a failed subprocess.
+no typing. The contrast worth drawing: Claude Code's hooks are out-of-process programs speaking a JSON-and-exit-code protocol; OpenCode's are in-process TypeScript speaking the language directly. You trade isolation for expressiveness — a crashing plugin is an OpenCode problem, not a failed subprocess.
 -->
 
 ---
 
 # The policy table
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="2" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Part 1 · Deny</b> <Steps n="2" total="5" /></span>
 
 Create `.opencode/plugins/guard.ts` — **part 1 of 2**, the part you review in a pull request:
 
@@ -660,14 +677,14 @@ const PROTECTED_PATHS = /(^|\/)(\.env|\.git\/|secrets?\/|.*\.pem$)/
 </div>
 
 <!--
-~2 min of typing. While they type: these regexes are illustrative, not exhaustive — a determined agent can obfuscate a shell command endlessly. Deny-lists are a speed bump, allow-lists are a wall; we use a deny-list because it fits on a slide. Foreshadow the .env/bash gap — they'll test it in two slides.
+of typing. While they type: these regexes are illustrative, not exhaustive — a determined agent can obfuscate a shell command endlessly. Deny-lists are a speed bump, allow-lists are a wall; we use a deny-list because it fits on a slide. Foreshadow the .env/bash gap — they'll test it in two slides.
 -->
 
 ---
 
 # Enforcing it
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="3" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Part 1 · Deny</b> <Steps n="3" total="5" /></span>
 
 Append **part 2 of 2** to the same file:
 
@@ -699,14 +716,14 @@ export const Guard: Plugin = async ({ directory }) => {
 ```
 
 <!--
-~3 min. Two things to point at. The thrown message is written for the model, not for a log — it's what the agent reads to propose an alternative. And note the tool names are lowercase and OpenCode-specific: bash, read, edit, write, patch. Getting a tool name wrong is a silent no-op, which is the theme of the next slide.
+Two things to point at. The thrown message is written for the model, not for a log — it's what the agent reads to propose an alternative. And note the tool names are lowercase and OpenCode-specific: bash, read, edit, write, patch. Getting a tool name wrong is a silent no-op, which is the theme of the next slide.
 -->
 
 ---
 
 # Load it and test it
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="4" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Part 1 · Deny</b> <Steps n="4" total="5" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -730,34 +747,33 @@ Plugins are loaded **at startup**, so restart OpenCode. Then prompt it with each
 
 <div class="card card--oc mb-3">
 <span class="card-title">Delete your <code>.env</code> rule and retry row 4</span>
-<code>read</code> on <code>.env</code> is <b>denied by OpenCode's defaults</b>, so row 3 was never yours to catch. Row 4 goes through <code>bash</code>, which defaults to <b>allow</b> — that one is entirely your plugin.<br><br>
-Knowing which layer actually stopped something is most of guardrail engineering. Put the rule back afterwards.
+Row 3 stays blocked — that was OpenCode's default, not you. Row 4 was yours. Knowing which layer fired is most of the job.
 </div>
 
 <div class="card">
 <span class="card-title">Test the allow path too</span>
-Rows 1 and 5 matter as much as 2–4. The last one is worth arguing about: <code>rm -r</code> without <code>-f</code> passes. Deliberate, or a gap?
+Rows 1 and 5 matter as much as 2–4. <code>rm -r</code> without <code>-f</code> passes — deliberate, or a gap?
 </div>
 
 </div>
 </div>
 
 <!--
-~4 min including their testing. The right column is the highest-value part of this exercise: people write a rule, see the behaviour they wanted, and conclude their rule worked — when the platform default did the work. Make them actually remove the rule and watch row 3 still get blocked.
+including their testing. The right column is the highest-value part of this part: people write a rule, see the behaviour they wanted, and conclude their rule worked — when the platform default did the work. Make them actually remove the rule and watch row 3 still get blocked.
 -->
 
 ---
 
 # When the plugin doesn't fire
 
-<span class="eyebrow eyebrow--deny"><b>Exercise 1 · Deny</b> <Steps n="5" total="5" /></span>
+<span class="eyebrow eyebrow--deny"><b>Part 1 · Deny</b> <Steps n="5" total="5" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
 
 <div class="card card--deny mb-3">
 <span class="card-title">Nothing happens at all</span>
-Wrong tool name. OpenCode's are lowercase — <code>bash</code>, <code>read</code>, <code>edit</code>, <code>write</code>, <code>patch</code>, <code>glob</code>, <code>grep</code>, <code>webfetch</code>, <code>task</code>. A typo is a silent no-op; <code>input.tool</code> never matches and your guard quietly passes everything.
+Wrong tool name. OpenCode's are lowercase. A typo is a silent no-op — your guard passes everything.
 </div>
 
 <div class="card mb-3">
@@ -775,49 +791,43 @@ Use <code>client.app.log({ body: { service, level, message } })</code> rather th
 
 <div class="card card--ask mb-3">
 <span class="card-title">⚠️ A hook that never fires</span>
-<code>@opencode-ai/plugin</code> exports a <code>permission.ask</code> hook type. Write one and it type-checks, loads, and <b>never fires</b> — the permission system publishes straight to the UI without calling plugins.<br><br>
-It's a known open issue with an unmerged fix. <b>Check your version before relying on it.</b>
+The SDK exports a <code>permission.ask</code> hook type. Write one and it type-checks, loads, and never runs — a known open issue. Check your version.
 </div>
 
 <div class="card card--deny">
 <span class="card-title">Why this matters</span>
-A guardrail that type-checks is not a guardrail that runs. Every policy you write needs a test that proves the <b>denied</b> path actually denies — not just that the allowed path still works.
+A guardrail that type-checks is not a guardrail that runs. Test the <b>denied</b> path, not just the allowed one.
 </div>
 
 </div>
 </div>
 
 <!--
-~2 min. The permission.ask trap is the single most useful thing on this slide — an entire class of "I wrote a guardrail" that silently does nothing, shipped with a type signature that says otherwise. Generalise it: this is why every guardrail needs a negative test, and why the audit log in two slides is not optional.
+The permission.ask trap is the single most useful thing on this slide — an entire class of "I wrote a guardrail" that silently does nothing, shipped with a type signature that says otherwise. Generalise it: this is why every guardrail needs a negative test, and why the audit log in two slides is not optional.
 -->
 
 ---
 
 # Rewriting a tool call
 
-<span class="eyebrow eyebrow--ask"><b>Exercise 1 · Rewrite</b></span>
+<span class="eyebrow eyebrow--ask"><b>Part 1 · Rewrite</b></span>
 
-<div class="grid grid-cols-2 gap-7 pt-1">
+<div class="grid grid-cols-2 gap-7 pt-2">
 <div>
 
-`output.args` is live. Assign to it and the call proceeds — changed. Add to `tool.execute.before`:
+`output.args` is live. Assign to it and the call proceeds — changed:
 
 ```ts
 // Agents love --no-verify. It skips YOUR git hooks.
 if (input.tool === "bash") {
   const cmd = String(output.args.command ?? "")
 
-  if (/\bgit\s+commit\b/.test(cmd) && /--no-verify|(^|\s)-n\b/.test(cmd)) {
-    output.args.command = cmd
-      .replace(/\s--no-verify\b/g, "")
-      .replace(/\s-n\b/g, "")
-    await client.app.log({
-      body: {
-        service: "guard",
-        level: "warn",
-        message: "stripped --no-verify from a git commit",
-      },
-    })
+  if (/\bgit\s+commit\b/.test(cmd) && /--no-verify/.test(cmd)) {
+    output.args.command = cmd.replace(/\s--no-verify\b/g, "")
+    await client.app.log({ body: {
+      service: "guard", level: "warn",
+      message: "stripped --no-verify",
+    }})
   }
 }
 ```
@@ -830,32 +840,32 @@ if (input.tool === "bash") {
 <VerdictRail active="rewrite" done="deny" class="mb-4" />
 
 <div class="card card--ask mb-3">
-<span class="card-title">Why this beats a denial</span>
-The agent wanted to commit, and committing is fine. Only the <i>bypass</i> was the problem. Refusing costs a turn and teaches the model nothing; rewriting gets the work done under your terms.
+<span class="card-title">Why not just deny?</span>
+Committing was fine. Only the bypass wasn't.
 </div>
 
 <div class="card card--deny mb-3">
-<span class="card-title">The cost of doing this</span>
-The model is now acting on a command it didn't write, and nothing in its context says so. Silent rewrites are how you get an agent confidently debugging the wrong thing. <b>Log every rewrite.</b>
+<span class="card-title">The cost</span>
+The model now acts on a command it didn't write. <b>Log every rewrite.</b>
 </div>
 
 <div class="card">
 <span class="card-title">Test it</span>
-<i>"Commit everything with --no-verify"</i> → the commit lands, the flag is gone, and your log has a line.
+<i>"Commit with --no-verify"</i> → it lands, the flag is gone.
 </div>
 
 </div>
 </div>
 
 <!--
-~4 min. This is the slide that justifies picking OpenCode for the workshop — sanitizing a call is a genuinely different move from allow/deny, and it maps onto real production guardrails: redacting secrets from an outbound request, pinning a --max-time onto curl, forcing --dry-run for a first attempt. The warning is real: an invisible rewrite is a debugging nightmare, so the log line is part of the guardrail, not decoration.
+Sanitizing a call is a genuinely different move from allow/deny, and it maps onto real production guardrails: redacting secrets from an outbound request, pinning --max-time onto curl, forcing --dry-run on a first attempt. The warning is real — an invisible rewrite is a debugging nightmare, so the log line is part of the guardrail, not decoration. Destructure `client` out of the plugin context to use the logger.
 -->
 
 ---
 
 # The audit trail
 
-<span class="eyebrow eyebrow--allow"><b>Exercise 1 · Observe</b></span>
+<span class="eyebrow eyebrow--allow"><b>Part 1 · Observe</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -891,31 +901,31 @@ export const Audit: Plugin = async ({ directory }) => {
 
 <div class="card card--allow mb-3">
 <span class="card-title">Observability is a guardrail</span>
-It's the only layer that helps <i>after</i> something goes wrong. Everything else answers "should this happen"; this one answers "what actually happened, and when".
+The only layer that helps <i>after</i> something goes wrong.
 </div>
 
 <div class="card card--mcp mb-3">
 <span class="card-title">It also names your tools</span>
-That <code>tool</code> field prints the exact string OpenCode uses for every call. In Exercise 2 it will tell you your MCP tools' real names — no guessing at prefixes.
+The <code>tool</code> field prints the exact string OpenCode uses. Part 2 needs it — no guessing at prefixes.
 </div>
 
 <div class="card card--ask">
 <span class="card-title">Careful what you log</span>
-Tool args contain exactly the secrets you spent this exercise protecting, and this file sits inside the repo. Real audit hooks redact before they write.
+Tool args hold the secrets you just protected, and this file is in the repo. Redact before writing.
 </div>
 
 </div>
 </div>
 
 <!--
-~3 min. Two payoffs land later: the tool-name discovery in Ex2, and the "did you gitignore it" question. Ask who would have gitignored .opencode/audit.log without being told — usually nobody, and it now contains every command the agent ran.
+Two payoffs land later: the tool-name discovery in Ex2, and the "did you gitignore it" question. Ask who would have gitignored .opencode/audit.log without being told — usually nobody, and it now contains every command the agent ran.
 -->
 
 ---
 
 # The permission config
 
-<span class="eyebrow eyebrow--oc"><b>Exercise 1 · Ask</b></span>
+<span class="eyebrow eyebrow--oc"><b>Part 1 · Ask</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -940,7 +950,7 @@ OpenCode's human-in-the-loop layer is **config, not a plugin**. In `opencode.jso
 
 <div class="card card--ask mt-3">
 <span class="card-title">⚠️ Last matching rule wins</span>
-Not most-specific, not first — <b>last</b>. Put the catch-all <code>"*"</code> at the top and narrow downwards. Reorder these five lines and you get a different security posture with no error message.
+Not most-specific, not first — <b>last</b>. Catch-all at the top, narrow downwards. Reorder and you get a different posture, silently.
 </div>
 
 </div>
@@ -948,9 +958,7 @@ Not most-specific, not first — <b>last</b>. Put the catch-all <code>"*"</code>
 
 <div class="card card--allow mb-3">
 <span class="card-title">Three actions, keyed by tool</span>
-<code>allow</code> · <code>ask</code> · <code>deny</code>, across <code>read</code>, <code>edit</code>, <code>bash</code>, <code>glob</code>, <code>grep</code>, <code>task</code>, <code>skill</code>, <code>webfetch</code>, <code>websearch</code> — plus two guards worth knowing:<br><br>
-<code>external_directory</code> — anything touching paths outside the project<br>
-<code>doom_loop</code> — the same call repeated three times identically
+<code>allow</code> · <code>ask</code> · <code>deny</code>, per tool. Plus <code>external_directory</code> and <code>doom_loop</code> — the same call three times over.
 </div>
 
 <div class="card mb-3">
@@ -960,21 +968,21 @@ Most tools default to <code>allow</code>. <code>external_directory</code> and <c
 
 <div class="card card--deny">
 <span class="card-title">And <code>--auto</code></span>
-Approves anything that would have asked. Explicit <code>deny</code> rules still hold — the same asymmetry as a plugin: you can tighten, never loosen.
+Approves anything that would have asked. Explicit <code>deny</code> still holds — you can tighten, never loosen.
 </div>
 
 </div>
 </div>
 
 <!--
-~3 min. The design rule to state plainly: use the permission config when a pattern can express it, reach for a plugin when the decision needs logic, external state, or a rewrite. Most teams reach for the plugin far too early. The last-match-wins ordering is the footgun — it reads like a firewall rule set and behaves like the opposite of one.
+The design rule to state plainly: use the permission config when a pattern can express it, reach for a plugin when the decision needs logic, external state, or a rewrite. Most teams reach for the plugin far too early. The last-match-wins ordering is the footgun — it reads like a firewall rule set and behaves like the opposite of one.
 -->
 
 ---
 
 # The finished setup
 
-<span class="eyebrow eyebrow--oc"><b>Exercise 1</b></span>
+<span class="eyebrow eyebrow--oc"><b>Part 1</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -992,7 +1000,7 @@ agent-guardrails-lab/
 
 <div class="card mt-3">
 <span class="card-title">Two mechanisms</span>
-The permission config is <b>declarative and reviewable</b>. The plugin is <b>programmable and testable</b>. Every guardrail you ship should be as far toward the first as it can go, and no further.
+Config is declarative and reviewable. A plugin is programmable. Ship as far toward the first as you can.
 </div>
 
 <div class="footnote mt-3">On Claude Code or Pi instead? The same policy, wired their way, is in the appendix.</div>
@@ -1015,7 +1023,7 @@ The permission config is <b>declarative and reviewable</b>. The plugin is <b>pro
 </div>
 
 <div class="card card--deny mt-3">
-<span class="card-title">Discuss · 2 min</span>
+<span class="card-title">Discuss</span>
 The denied calls aren't in your audit log. Is that the right design? What would you show an auditor to prove the block happened?
 </div>
 
@@ -1023,7 +1031,7 @@ The denied calls aren't in your audit log. Is that the right design? What would 
 </div>
 
 <!--
-~4 min. Row 5 is the interesting one: the permission config denies "rm *" AND the plugin throws. Ask which fired first — the permission check runs before the tool executes, so the config wins and the plugin never sees it. That's the honest answer to "which layer caught it", and it's why the audit log alone can't tell you.
+Row 5 is the interesting one: the permission config denies "rm *" AND the plugin throws. Ask which fired first — the permission check runs before the tool executes, so the config wins and the plugin never sees it. That's the honest answer to "which layer caught it", and it's why the audit log alone can't tell you.
 -->
 
 ---
@@ -1031,9 +1039,9 @@ layout: center
 class: text-center
 ---
 
-# Exercise 2 · Build an MCP server
+# Part 2 · Build an MCP server
 
-<span class="op-60">≈ 20 min · now that the cage exists, build something to put in it</span>
+<span class="op-60"> · now that the cage exists, build something to put in it</span>
 
 <div class="grid grid-cols-3 gap-4 pt-8 text-left">
 <div class="card card--mcp">
@@ -1042,7 +1050,7 @@ Three tools on a ticket tracker — docstrings become descriptions, type hints b
 </div>
 <div class="card card--mcp">
 <span class="card-title">Expose</span>
-One <code>mcp.run()</code> over stdio, one <code>mcp</code> block in <code>opencode.json</code>.
+One <code>mcp.run</code> over stdio, one <code>mcp</code> block in <code>opencode.json</code>.
 </div>
 <div class="card card--mcp">
 <span class="card-title">Discover</span>
@@ -1053,14 +1061,14 @@ Let your audit plugin tell you what OpenCode actually named your tools.
 <div class="mt-7 text-sm op-60">The protocol is language-agnostic — the server is Python, the guardrails are TypeScript, and neither knows about the other.</div>
 
 <!--
-~30s. Quick pivot from control to capability. Everyone should have the venv ready by now — if not, this is the moment they find out.
+Quick pivot from control to capability. Everyone should have the venv ready by now — if not, this is the moment they find out.
 -->
 
 ---
 
 # Defining the tools
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — the server <Steps n="1" total="4" /></span>
+<span class="eyebrow eyebrow--mcp"><b>Part 2</b> — the server <Steps n="1" total="4" /></span>
 
 Create `tickets_server.py` — **part 1 of 2**:
 
@@ -1098,14 +1106,14 @@ Three ideas from the talk, live in the code: the <b>docstring is the tool descri
 </div>
 
 <!--
-~3 min. Point at the docstring on create_ticket while people type. Ticket 2 is protected on purpose and it matters twice later — in Ex3 and in the bonus.
+Point at the docstring on create_ticket while people type. Ticket 2 is protected on purpose and it matters twice later — in Ex3 and in the bonus.
 -->
 
 ---
 
 # The destructive tool
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — the server <Steps n="2" total="4" /></span>
+<span class="eyebrow eyebrow--mcp"><b>Part 2</b> — the server <Steps n="2" total="4" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -1136,31 +1144,31 @@ if __name__ == "__main__":
 
 <div class="card card--mcp mb-3">
 <span class="card-title">Errors are returned, not raised</span>
-Every failure path hands the model a string it can act on — including <i>what to do next</i> ("call list_tickets"). A raised exception is a dead end; a returned error is a retry.
+Every failure hands the model a string it can act on, including what to do next. An exception is a dead end.
 </div>
 
 <div class="card card--allow mb-3">
 <span class="card-title">The <code>protected</code> flag is server-side policy</span>
-It holds no matter which client connects, whether any plugin is loaded, or whether anyone restarted OpenCode. Exercise 3 puts a second, completely independent lock on the same door.
+It holds whatever client connects, and whether or not any plugin loaded. Part 3 adds a second, independent lock.
 </div>
 
 <div class="card">
 <span class="card-title">Design rule</span>
-If a tool can destroy something, its description should say so in the first sentence. The model reads that sentence every single turn.
+If a tool can destroy something, say so in the first sentence of its description.
 </div>
 
 </div>
 </div>
 
 <!--
-~2 min. This is the defense-in-depth setup: a server-side rule now, a client-side gate in Ex3. The discussion at the end of Ex3 pays it off.
+This is the defense-in-depth setup: a server-side rule now, a client-side gate in Ex3. The discussion at the end of Ex3 pays it off.
 -->
 
 ---
 
 # Registering the server
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — the client side <Steps n="3" total="4" /></span>
+<span class="eyebrow eyebrow--mcp"><b>Part 2</b> — the client side <Steps n="3" total="4" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -1193,31 +1201,28 @@ Restart OpenCode, then ask:
 
 <div class="card card--allow mb-3">
 <span class="card-title">Read your audit log</span>
-<code>cat .opencode/audit.log</code> — the <code>tool</code> field has the real names. MCP tools are registered as <code>&lt;server&gt;_&lt;tool&gt;</code>, so yours are:<br><br>
-<code>tickets_list_tickets</code><br>
-<code>tickets_create_ticket</code><br>
-<code>tickets_delete_ticket</code>
+<code>cat .opencode/audit.log</code> — MCP tools register as <code>&lt;server&gt;_&lt;tool&gt;</code>, so yours are <code>tickets_list_tickets</code>, <code>tickets_create_ticket</code>, <code>tickets_delete_ticket</code>.
 </div>
 
 <div class="card card--oc mb-3">
 <span class="card-title">Verify it yourself</span>
-Prefixes differ between harnesses — Claude Code uses <code>mcp__tickets__delete_ticket</code> for the same tool. <b>Read the name out of your log</b> rather than trusting a slide. Exercise 3 needs it exactly right.
+Prefixes differ per harness — Claude Code says <code>mcp__tickets__delete_ticket</code>. Read the name from your log, not this slide.
 </div>
 
-<div class="footnote">The observability layer you built before the thing being observed existed is now the thing telling you how to guard it.</div>
+<div class="footnote">You built the observability before the thing being observed.</div>
 
 </div>
 </div>
 
 <!--
-~4 min. Make people actually cat the file — it lands far better than a slide can, and it inoculates them against the single most common Ex3 failure, which is guessing the tool name. Note the audit plugin needed zero changes to cover MCP: it never filtered by tool.
+Make people actually cat the file — it lands far better than a slide can, and it inoculates them against the single most common Ex3 failure, which is guessing the tool name. Note the audit plugin needed zero changes to cover MCP: it never filtered by tool.
 -->
 
 ---
 
 # Checkpoint and stretch
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2</b> — verify <Steps n="4" total="4" /></span>
+<span class="eyebrow eyebrow--mcp"><b>Part 2</b> — verify <Steps n="4" total="4" /></span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -1228,7 +1233,7 @@ Prefixes differ between harnesses — Claude Code uses <code>mcp__tickets__delet
 
 <div class="card card--deny mb-3">
 <span class="card-title">If it doesn't work</span>
-<code>python tickets_server.py</code> should start and wait silently (Ctrl-C to exit) · check the command path resolves from the project root · a bad <code>opencode.json</code> fails quietly, so lint it · raise <code>timeout</code> if the server is slow to start.
+Run the server by hand; check the command path resolves from the project root; lint <code>opencode.json</code>, which fails quietly.
 </div>
 
 </div>
@@ -1256,14 +1261,14 @@ def open_tickets() -> str:
 </div>
 
 <!--
-~2 min plus stretch time for fast finishers. The tools-vs-resources distinction only really lands once someone has written both, which is why it's a stretch and not a slide.
+plus stretch time for fast finishers. The tools-vs-resources distinction only really lands once someone has written both, which is why it's a stretch and not a slide.
 -->
 
 ---
 
 # The same server in TypeScript <span class="text-base op-50">optional</span>
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2 · Other languages</b></span>
+<span class="eyebrow eyebrow--mcp"><b>Part 2 · Other languages</b></span>
 
 The protocol is the contract; the language is your choice. Same server on the official TS SDK (`npm i @modelcontextprotocol/sdk zod`):
 
@@ -1310,14 +1315,14 @@ await server.connect(new StdioServerTransport());
 <div class="card card--mcp mt-2">Zod schemas replace Python's type hints; the description string replaces the docstring. <b>Identical wire protocol</b> — swap the <code>command</code> in <code>opencode.json</code> to <code>["npx", "tsx", "tickets_server.ts"]</code> and the agent cannot tell the difference.</div>
 
 <!--
-~60s if anyone asks. The point of this slide is that nothing you learned is Python-specific — the contract lives in the protocol, not the SDK.
+if anyone asks. The point of this slide is that nothing you learned is Python-specific — the contract lives in the protocol, not the SDK.
 -->
 
 ---
 
 # The same server in Rust <span class="text-base op-50">optional</span>
 
-<span class="eyebrow eyebrow--mcp"><b>Exercise 2 · Other languages</b></span>
+<span class="eyebrow eyebrow--mcp"><b>Part 2 · Other languages</b></span>
 
 Official `rmcp` crate (`cargo add rmcp -F server,transport-io schemars serde serde_json tokio -F tokio/full`):
 
@@ -1371,7 +1376,7 @@ async fn main() -> anyhow::Result<()> {
 <div class="card card--mcp mt-2"><b>Doc comments become tool descriptions</b> and <code>schemars</code> derives the JSON schema from the struct — the same contract as the Python docstrings and type hints, enforced by the compiler.</div>
 
 <!--
-~60s. Worth showing to a room that assumes MCP means Python or Node. The derive-based schema is the nicest ergonomics of the three.
+Worth showing to a room that assumes MCP means Python or Node. The derive-based schema is the nicest ergonomics of the three.
 -->
 
 ---
@@ -1379,27 +1384,26 @@ layout: center
 class: text-center
 ---
 
-# Exercise 3 · Guarding your own tools
+# Part 3 · Guarding your own tools
 
-<span class="op-60">≈ 10 min · the payoff for doing control first</span>
+<span class="op-60"> · the payoff for doing control first</span>
 
 <div class="pt-8 max-w-2xl mx-auto">
 <div class="card card--allow text-left">
 <span class="card-title">Your MCP tools are just tools.</span>
-<code>audit.ts</code> has been logging them since the moment the server connected — it never filtered by name. Nothing about your guardrails is MCP-aware, and nothing needs to be.<br><br>
-So the question isn't <i>whether</i> you can gate <code>tickets_delete_ticket</code>. It's <b>which of your two mechanisms should</b>.
+<code>audit.ts</code> has been logging them since the server connected. Nothing about your guardrails is MCP-aware.<br><br>So the question isn't <i>whether</i> you can gate <code>tickets_delete_ticket</code>. It's <b>which mechanism should</b>.
 </div>
 </div>
 
 <!--
-~30s. Let the "you already did the work" land. This is the argument for building control before capability, and it's far more convincing as an experience than as a bullet point.
+Let the "you already did the work" land. This is the argument for building control before capability, and it's far more convincing as an experience than as a bullet point.
 -->
 
 ---
 
 # Two ways to gate it
 
-<span class="eyebrow eyebrow--allow"><b>Exercise 3</b> — config or plugin?</span>
+<span class="eyebrow eyebrow--allow"><b>Part 3</b> — config or plugin?</span>
 
 <div class="grid grid-cols-2 gap-7 pt-1">
 <div>
@@ -1450,33 +1454,33 @@ Restart, then:
 
 <div class="card card--allow mt-3">
 <span class="card-title">Ticket 2 was protected twice</span>
-The permission rule is a <b>client-side human gate</b>. The <code>protected</code> flag is a <b>server-side domain rule</b>. Neither knows the other exists — and that's the point.
+A client-side human gate, and a server-side domain rule. Neither knows the other exists.
 </div>
 
 </div>
 </div>
 
 <!--
-~5 min including the test. Most rooms reach straight for Option B because they just spent 30 minutes writing TypeScript. Push back: a config line a security reviewer can read beats a plugin branch they have to trust, and only the config can produce an approval prompt today. Reserve the plugin for decisions a pattern can't express.
+including the test. Most rooms reach straight for Option B because they just wrote a plugin. Push back: a config line a security reviewer can read beats a plugin branch they have to trust, and only the config can produce an approval prompt today. Reserve the plugin for decisions a pattern can't express.
 -->
 
 ---
 
-# Client-side and server-side <span class="text-base op-50">Discuss · 3 min</span>
+# Client-side and server-side <span class="text-base op-50">Discuss</span>
 
-<span class="eyebrow eyebrow--allow"><b>Exercise 3</b></span>
+<span class="eyebrow eyebrow--allow"><b>Part 3</b></span>
 
 <div class="grid grid-cols-2 gap-7 pt-3">
 <div>
 
 <div class="card card--ask mb-3">
 <span class="card-title">What only the client catches</span>
-A compromised, buggy, or newly-updated <b>server</b>. If someone ships a <code>delete_ticket</code> that forgets the <code>protected</code> check, your gate still puts a human in front of it.
+A compromised or buggy server. If someone ships a <code>delete_ticket</code> that forgets the check, your gate still fires.
 </div>
 
 <div class="card card--mcp">
 <span class="card-title">What only the server catches</span>
-Any <b>client that doesn't run your guardrails</b> — a colleague's laptop, CI, a different agent, an SDK script, or the same OpenCode started with <code>--auto</code>.
+Any client not running your guardrails — CI, a colleague's laptop, or the same agent under <code>--auto</code>.
 </div>
 
 </div>
@@ -1484,25 +1488,24 @@ Any <b>client that doesn't run your guardrails</b> — a colleague's laptop, CI,
 
 <div class="card mb-3">
 <span class="card-title">The general shape</span>
-Client-side guardrails are <b>fast, contextual and easy to change</b>. Server-side guardrails are <b>authoritative and slow to change</b>. Production systems want both because they fail in different directions.
+Client-side is fast and easy to change. Server-side is authoritative. They fail in different directions.
 </div>
 
 <div class="card card--deny">
 <span class="card-title">Ask the room</span>
-Which of your two locks survives an attacker who can edit files in the repo?<br><br>
-<span class="op-70">Neither. <code>opencode.json</code> and <code>.opencode/plugins/</code> are files like any other — which is what the bonus round is about.</span>
+Which lock survives an attacker who can edit the repo?<br><br><span class="op-70">Neither. That's the bonus round.</span>
 </div>
 
 </div>
 </div>
 
 <!--
-~3 min, and this is the most valuable conversation of the workshop — protect the time for it. Push on the last question: a plugin is executable code that the repo can supply, so cloning a hostile repo and starting OpenCode in it is already game over. Global config and organisation policy exist precisely because project-local config can't be trusted.
+and this is the most valuable conversation of the workshop — protect the time for it. Push on the last question: a plugin is executable code that the repo can supply, so cloning a hostile repo and starting OpenCode in it is already game over. Global config and organisation policy exist precisely because project-local config can't be trusted.
 -->
 
 ---
 
-# Bonus · Red team it <span class="text-base op-50">≈ 10 min</span>
+# Bonus · Red team it
 
 <span class="eyebrow eyebrow--deny">Tool results are untrusted input.</span>
 
@@ -1530,23 +1533,19 @@ Creating it is harmless. It's just data — until something reads it.
 
 <div class="card card--ask mb-3">
 <span class="card-title">Three holes to find</span>
-<b>The subagent path.</b> Does your plugin fire for tools called inside a <code>task</code>-spawned subagent? Test it — don't assume. Subagents also have their own permission overrides.<br><br>
-<b>The rewrite you can't see.</b> Your <code>--no-verify</code> stripper edits a command the model believes it wrote. What happens when it reads the git log and the history disagrees with its memory?<br><br>
-<b>Everything you didn't enumerate.</b> <code>webfetch</code> can exfiltrate a secret in a query string. Is it on your list?
+<b>Subagents.</b> Does your plugin fire for tools called inside a <code>task</code>? Test it, don't assume.<br><br><b>The invisible rewrite.</b> The model thinks it wrote that command.<br><br><b>What you never enumerated.</b> <code>webfetch</code> can exfiltrate a secret in a query string.
 </div>
 
 <div class="card">
 <span class="card-title">Debrief</span>
-• Which layer caught it — model judgement, permission config, plugin, or server?<br>
-• The <b>lethal trifecta</b>: private data + untrusted content + ability to act. Which leg did you actually remove?<br>
-• What would an <b>egress</b> guardrail look like here?
+• Which layer caught it?<br>• The <b>lethal trifecta</b>: private data + untrusted content + ability to act. Which leg did you remove?<br>• What would an egress guardrail look like?
 </div>
 
 </div>
 </div>
 
 <!--
-~10 min. Outcomes vary by model mood, and that variance IS the lesson: probabilistic judgement plus deterministic gates. The subagent question is the sharpest one — plugin coverage of task-spawned calls has been inconsistent historically, and "I tested it in the main loop" is exactly how a guardrail gets shipped with a hole. Let a few teams report what they found.
+Outcomes vary by model mood, and that variance IS the lesson: probabilistic judgement plus deterministic gates. The subagent question is the sharpest one — plugin coverage of task-spawned calls has been inconsistent historically, and "I tested it in the main loop" is exactly how a guardrail gets shipped with a hole. Let a few teams report what they found.
 -->
 
 ---
@@ -1556,7 +1555,7 @@ Creating it is harmless. It's just data — until something reads it.
 <div class="grid grid-cols-2 gap-7 pt-2">
 <div>
 
-<div class="eyebrow eyebrow--oc">Control · Exercise 1</div>
+<div class="eyebrow eyebrow--oc">Control · Part 1</div>
 
 | Concept | Where you touched it |
 |---|---|
@@ -1571,7 +1570,7 @@ Creating it is harmless. It's just data — until something reads it.
 </div>
 <div>
 
-<div class="eyebrow eyebrow--mcp">Capability · Exercises 2 & 3</div>
+<div class="eyebrow eyebrow--mcp">Capability · Parts 2 & 3</div>
 
 | Concept | Where you touched it |
 |---|---|
@@ -1586,7 +1585,7 @@ Creating it is harmless. It's just data — until something reads it.
 </div>
 </div>
 
-<div class="mt-5 text-center text-sm op-70">Every row is a slide from the first twelve minutes that you now have muscle memory for.</div>
+<div class="mt-5 text-center text-sm op-70">Every row is a slide you now have muscle memory for.</div>
 
 <!--
 Close the loop. Note the split: the left column existed before the right column did, which is the argument for the ordering of this whole lab.
@@ -1604,7 +1603,7 @@ class: text-center
 <div class="grid grid-cols-2 gap-5 pt-10 text-left">
 <div class="card">
 <span class="card-title">Claude Code</span>
-Out-of-process programs: JSON on stdin, the verdict as an exit code, and a fourth verdict — <code>ask</code> — that OpenCode keeps in config instead.
+Out-of-process: JSON on stdin, verdict as an exit code, and <code>ask</code> inside the hook.
 </div>
 <div class="card">
 <span class="card-title">Pi</span>
@@ -1655,25 +1654,24 @@ sys.exit(0)
 
 <div class="card card--deny mb-3">
 <span class="card-title">The footgun</span>
-Only <code>exit 2</code> blocks. <code>exit 1</code> is a non-blocking error and the tool <b>still runs</b> — and an unhandled Python exception exits 1. A crashing guard fails <i>open</i>.<br><br>
-OpenCode has no equivalent: a thrown error is a thrown error.
+Only <code>exit 2</code> blocks. <code>exit 1</code> lets the tool run — and an uncaught exception exits 1, so a crashing guard fails <i>open</i>.
 </div>
 
 <div class="card card--allow mb-3">
 <span class="card-title">What you gain</span>
-Process isolation, any language, and a richer verdict set — <code>allow</code>, <code>deny</code>, <code>ask</code>, <code>defer</code> via JSON on stdout, with precedence <b>deny &gt; defer &gt; ask &gt; allow</b>. The <code>ask</code> that OpenCode puts in config, Claude Code puts in the hook.
+Process isolation, any language, and a fourth verdict — <code>ask</code> — inside the hook itself.
 </div>
 
 <div class="card">
 <span class="card-title">What you lose</span>
-A process spawn per tool call, and no easy rewrite — mutating input means returning <code>updatedInput</code> JSON rather than assigning to a variable.
+A process spawn per call, and no easy rewrite.
 </div>
 
 </div>
 </div>
 
 <!--
-~90s. Two families: out-of-process JSON and exit codes (Claude Code, Codex CLI adopted the same wire protocol almost verbatim) vs in-process TypeScript (OpenCode, Pi). Same policy table, different spelling. Ask the room which failure mode they'd rather own — a crashed subprocess that fails open, or a crashed plugin that takes the harness with it.
+Two families: out-of-process JSON and exit codes (Claude Code, Codex CLI adopted the same wire protocol almost verbatim) vs in-process TypeScript (OpenCode, Pi). Same policy table, different spelling. Ask the room which failure mode they'd rather own — a crashed subprocess that fails open, or a crashed plugin that takes the harness with it.
 -->
 
 ---
@@ -1723,14 +1721,14 @@ A crashing <code>tool_call</code> hook <b>blocks</b> the tool. The opposite of C
 
 <div class="card card--oc">
 <span class="card-title">What actually ported</span>
-The regexes never changed across these slides. That's the portable part — <b>the wiring is the only thing you rewrite</b>, which is a good argument for keeping policy in data.
+The regexes never changed. Only the wiring did — which is the argument for keeping policy in data.
 </div>
 
 </div>
 </div>
 
 <!--
-~60s. Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
+Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
 -->
 
 ---
@@ -1746,10 +1744,10 @@ class: text-center
 
 Claude Code hooks & MCP configuration — <code>code.claude.com/docs</code><br>
 The protocol, SDKs, example servers — <code>modelcontextprotocol.io</code><br>
-This deck & the full lab handout — <code>slides.md</code> and <code>exercises.md</code> in this repo
+This deck & the full lab handout — <code>slides.md</code> and <code>parts.md</code> in this repo
 
 </div>
 
 <!--
-Point at the repo: slides.md is the talk, exercises.md is the full self-contained lab handout.
+Point at the repo: slides.md is the talk, parts.md is the full self-contained lab handout.
 -->

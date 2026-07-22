@@ -210,3 +210,81 @@
 /* code blocks shouldn't dominate a split slide */
 .slidev-layout pre { font-size: 0.78em; }
 .slidev-layout .cols-tight pre { font-size: 0.72em; }
+
+/* --- nested defence layers (the "where guardrails go" slide) ---------- */
+
+.layers {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.layer {
+  border-radius: 0.6rem;
+  border: 1px solid rgba(var(--vd-mute), 0.35);
+  padding: 0.55rem 0.8rem 0.6rem;
+  position: relative;
+}
+
+.layer + .layer,
+.layer .layer {
+  margin-top: 0.45rem;
+}
+
+.layer-name {
+  font-weight: 700;
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+}
+
+.layer-note {
+  font-size: 0.74rem;
+  opacity: 0.68;
+  margin-left: 0.5rem;
+  font-weight: 400;
+}
+
+.layer--l1 { background: rgba(var(--vd-oc), 0.09);    border-color: rgba(var(--vd-oc), 0.45); }
+.layer--l2 { background: rgba(var(--vd-deny), 0.09);  border-color: rgba(var(--vd-deny), 0.45); }
+.layer--l3 { background: rgba(var(--vd-mcp), 0.09);   border-color: rgba(var(--vd-mcp), 0.45); }
+.layer--l4 { background: rgba(var(--vd-ask), 0.09);   border-color: rgba(var(--vd-ask), 0.45); }
+.layer--l5 { background: rgba(var(--vd-allow), 0.09); border-color: rgba(var(--vd-allow), 0.45); }
+
+.layer-core {
+  border-radius: 0.5rem;
+  border: 1px dashed rgba(var(--vd-mute), 0.6);
+  padding: 0.45rem;
+  text-align: center;
+  font-family: ui-monospace, "SF Mono", "Fira Code", monospace;
+  font-size: 0.78rem;
+  margin-top: 0.45rem;
+}
+
+/* --- annotated code: a rule pinned to a line of a snippet ------------- */
+
+.pin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  font-family: ui-monospace, monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(var(--vd-mute), 0.25);
+  flex: none;
+}
+
+.rule {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+}
+
+.rule + .rule { border-top: 1px solid rgba(var(--vd-mute), 0.18); }
+
+.rule-body { font-size: 0.85rem; line-height: 1.4; }
+.rule-body b { display: block; }
+.rule-body span { opacity: 0.65; font-size: 0.78rem; }
