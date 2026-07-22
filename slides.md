@@ -32,23 +32,21 @@ Frame: agentic engineering means the model doesn't just write code, it acts — 
 
 # How an agent actually runs
 
-<div class="grid grid-cols-2 gap-10 pt-2">
-<div>
+<div class="grid grid-cols-2 gap-10 pt-6">
+<div class="pt-6">
 
 <v-clicks>
 
-- 🧠 **A model alone only emits text** — it can't read a file, run a test, or call an API. Everything it "does" is a request.
-
-- 🔁 **The harness closes the loop** — it executes the model's tool calls and feeds results back as new context. That loop *is* the agent.
-
-- ⚠️ **Autonomy raises the stakes** — each new capability is also a new failure mode. Capability and control have to ship together.
+- 🧠 **Model** — emits text
+- 🔁 **Harness** — executes, feeds back
+- ⚠️ **Autonomy** — new failure modes
 
 </v-clicks>
 
 </div>
 <div>
 
-```mermaid {scale: 0.7}
+```mermaid {scale: 0.8}
 flowchart TB
   A["1 · Model decides"] --> B["2 · Emits a tool call"]
   B --> C["3 · Harness executes"]
@@ -62,14 +60,13 @@ flowchart TB
 <div class="abs-b mx-14 mb-6 text-sm italic op-60">Tools decide what the loop can touch. Guardrails decide what it may do.</div>
 
 <!--
-Walk the diagram clockwise: the model proposes, the harness disposes. Key sentence: the model never executes anything itself — the runtime does, which is exactly where we can intervene. Left side sets up the tension of the talk: capability (tools, MCP) vs. control (guardrails).
+Walk the diagram clockwise: the model proposes, the harness disposes. The model never executes anything itself — the runtime does, which is exactly where we can intervene. Full sentences live here in the notes now, not on the slide: a model alone only emits text; the harness closes the loop and that loop IS the agent; every new capability is a new failure mode, so capability and control ship together.
 -->
+
 
 ---
 
 # Anatomy of a tool call
-
-<span class="text-sm op-60">Pillar 1 · Tools</span>
 
 <div class="grid grid-cols-2 gap-8 pt-2">
 <div>
@@ -109,8 +106,6 @@ model call → validate → execute → observe
 </div>
 </div>
 
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">The model is your API consumer — write descriptions the way you'd want an intern briefed.</div>
-
 <!--
 Demystify: a tool is just JSON schema + a docstring. Point at the description — it says when NOT to use the tool, which prevents most misuse. Bottom strip: the runtime, not the model, validates and executes — the runtime is our control point.
 -->
@@ -119,52 +114,25 @@ Demystify: a tool is just JSON schema + a docstring. Point at the description �
 
 # Four rules for tool design
 
-<span class="text-sm op-60">Pillar 1 · Tools</span>
-
-<div class="grid grid-cols-2 gap-8 pt-3">
-<div>
+<div class="bigcode pt-4">
 
 ```python
-@mcp.tool()                              # 2
-def create_ticket(title: str) -> dict:   # 3
+@mcp.tool()                              # few tools, sharp edges — each one costs accuracy
+def create_ticket(title: str) -> dict:   # type hints ARE the schema
     """Create a NEW ticket.
-    Not for editing existing ones."""    # 1
+    Not for editing existing ones."""    # the docstring is a prompt — say when NOT to use it
 
     if not title:
-        return "Error: title is required."   # 4
+        return "Error: title is required."   # errors the model can act on, not stack traces
     ...
 ```
 
-</div>
-<div>
-
-<div class="rule">
-<span class="pin">1</span>
-<span class="rule-body"><b>Descriptions are prompts</b><span>Say when not to use it.</span></span>
-</div>
-
-<div class="rule">
-<span class="pin">2</span>
-<span class="rule-body"><b>Small, sharp surface</b><span>Every extra tool costs accuracy.</span></span>
-</div>
-
-<div class="rule">
-<span class="pin">3</span>
-<span class="rule-body"><b>Typed in, structured out</b><span>Schemas reject bad calls early.</span></span>
-</div>
-
-<div class="rule">
-<span class="pin">4</span>
-<span class="rule-body"><b>Errors are information</b><span>Return something the model can act on.</span></span>
-</div>
-
-</div>
 </div>
 
 <div class="abs-b mx-14 mb-6 text-sm italic op-60">Tool design is prompt engineering with types.</div>
 
 <!--
-One beat per rule, each pinned to the line it governs. Emphasise 2 — context is a budget, and tool definitions compete with the actual task. And 4 — an agent that gets a good error self-corrects; one that gets a stack trace flails. Segue: writing one tool is easy, wiring tools into every agent is the pain.
+Four rules, each pinned to the line it governs by a comment. Read the code, not a list. Emphasise the first comment — context is a budget, and tool definitions compete with the actual task — and the last: an agent that gets a good error self-corrects; one that gets a stack trace flails.
 -->
 
 
@@ -172,14 +140,12 @@ One beat per rule, each pinned to the line it governs. Emphasise 2 — context i
 
 # The problem MCP solves
 
-<span class="text-sm op-60">Pillar 2 · MCP</span>
-
 <div class="grid grid-cols-2 gap-6 pt-1">
 <div class="text-center">
 
 **Without MCP**
 
-```mermaid {scale: 0.78}
+```mermaid {scale: 0.7}
 flowchart LR
   CC[Claude Code] --- GH[GitHub]
   CC --- DB[(Database)]
@@ -199,7 +165,7 @@ flowchart LR
 
 **With MCP**
 
-```mermaid {scale: 0.78}
+```mermaid {scale: 0.7}
 flowchart LR
   CC[Claude Code] --- M{{MCP}}
   IDE[IDE agent] --- M
@@ -214,7 +180,7 @@ flowchart LR
 </div>
 </div>
 
-<div class="abs-b mx-14 mb-5 text-sm italic op-60">One port instead of a drawer full of adapters.</div>
+<div class="mt-3 text-center text-sm italic op-60">One port instead of a drawer full of adapters.</div>
 
 <!--
 The M-by-N argument sells itself visually: left is the world of bespoke plugins, right is one protocol in the middle. Mention adoption breadth (it outgrew Anthropic — other major vendors adopted it in 2025), then move on: the interesting part is the architecture.
@@ -224,9 +190,7 @@ The M-by-N argument sells itself visually: left is the world of bespoke plugins,
 
 # How MCP fits together
 
-<span class="text-sm op-60">Pillar 2 · MCP</span>
-
-```mermaid {scale: 0.8}
+```mermaid {scale: 1.0}
 flowchart LR
   subgraph host["Host · agent + guardrails"]
     A["Agent (model)"] <--> C["MCP client"]
@@ -235,11 +199,7 @@ flowchart LR
   C <-- "HTTP · remote" --> G["GitHub<br>someone else's"]
 ```
 
-<div class="grid grid-cols-3 gap-4 pt-1 text-sm">
-<div class="card"><span class="card-title">🔧 Tools</span>Actions the model calls.</div>
-<div class="card"><span class="card-title">🗄️ Resources</span>Context the app attaches.</div>
-<div class="card"><span class="card-title">✨ Prompts</span>Templates the user invokes.</div>
-</div>
+<div class="pt-2 text-center text-sm op-70"><b>tools</b> act · <b>resources</b> inform · <b>prompts</b> template</div>
 
 <div class="abs-b mx-14 mb-5 text-sm italic op-60">Tools surface under the server's name — if you can name it, you can gate it.</div>
 
@@ -251,268 +211,302 @@ Host runs a client per server; transports: stdio for local processes, streamable
 
 # The threat model
 
-<span class="text-sm op-60">Pillar 3 · Guardrails</span>
+<div class="grid grid-cols-4 gap-4 pt-4 items-stretch">
 
-<div class="grid grid-cols-2 gap-4 pt-3">
-
-<div class="p-3 rounded-lg bg-red-500/10 text-sm">
-<b>⌨️ Destructive actions</b><br>
-<span class="op-80"><code>rm -rf</code>, force-push, dropped tables — a perfectly helpful agent executing the wrong plan.</span>
+<div class="tcol tcol--deny">
+<b>⌨️ Destructive actions</b>
+<i>• <code>rm -rf</code>, force-push</i>
+<i>• dropped tables</i>
+<i>• the right agent, the wrong plan</i>
 </div>
 
-<div class="p-3 rounded-lg bg-amber-500/10 text-sm">
-<b>🔑 Secret & data leakage</b><br>
-<span class="op-80">Tokens, <code>.env</code> files and customer data sit one Read and one outbound request away from exfiltration.</span>
+<div class="tcol tcol--ask">
+<b>🔑 Data leakage</b>
+<i>• tokens, <code>.env</code>, customer data</i>
+<i>• one read + one request away</i>
 </div>
 
-<div class="p-3 rounded-lg bg-gray-500/10 text-sm">
-<b>🐛 Prompt injection</b><br>
-<span class="op-80">Tool results are untrusted input: a README, web page, or ticket body can smuggle instructions to the model.</span>
+<div class="tcol tcol--hook">
+<b>🐛 Prompt injection</b>
+<i>• payloads arrive in tool <b>results</b></i>
+<i>• a README or ticket can steer the model</i>
 </div>
 
-<div class="p-3 rounded-lg bg-blue-500/10 text-sm">
-<b>🎯 Goal drift & Goodhart</b><br>
-<span class="op-80">Give an agent a metric and it optimizes the metric — deleting a failing test technically "fixes" the build.</span>
+<div class="tcol tcol--mcp">
+<b>🎯 Goal drift</b>
+<i>• the metric gets optimized</i>
+<i>• deleting a failing test "fixes" the build</i>
 </div>
 
 </div>
 
-<div class="mt-4 p-3 rounded-lg bg-amber-500/15 text-sm">
-⚠️ <b>Danger compounds:</b> private data + untrusted content + the ability to act, combined in one agent, is the classic exfiltration setup. <i>"The model will just behave"</i> is not a control.
+<div class="mt-4 card card--ask">
+⚠️ <b>They compound:</b> private data + untrusted content + the ability to act = the classic exfiltration setup.
 </div>
 
 <!--
-These are failure modes, not hypotheticals — most of the audience has seen at least one. Spend the extra beat on prompt injection: it flips the trust model, because attack payloads arrive through tool RESULTS, not the user. The callout is the 'lethal trifecta' framing: data + injection + action = exfiltration.
+These are failure modes, not hypotheticals — most of the audience has seen at least one. Spend the extra beat on injection: it flips the trust model, because payloads arrive through tool RESULTS, not the user. The bottom bar is the lethal-trifecta framing. "The model will just behave" is not a control.
 -->
+
 
 ---
 
 # Where guardrails go
 
-<span class="text-sm op-60">Pillar 3 · Guardrails</span>
-
-<div class="layers pt-3">
-<div class="layer layer--l5">
-<span class="layer-name">✅ Verification</span><span class="layer-note">was the output any good?</span>
-<div class="layer layer--l4">
-<span class="layer-name">🙋 Human approval</span><span class="layer-note">irreversible things</span>
-<div class="layer layer--l3">
-<span class="layer-name">📦 Sandbox</span><span class="layer-note">caps the blast radius</span>
-<div class="layer layer--l2">
-<span class="layer-name">🪝 Plugins &amp; hooks</span><span class="layer-note">policy as code</span>
-<div class="layer layer--l1">
-<span class="layer-name">🔒 Permissions</span><span class="layer-note">what it may touch at all</span>
-<div class="layer-core">the tool call</div>
-</div>
-</div>
-</div>
-</div>
-</div>
+<div class="bars pt-4">
+<div class="bar bar--l1"><b>🔒 Permissions</b><span>allow · ask · deny — the human gate lives here</span><span class="chip chip--mute">gate</span></div>
+<div class="bar bar--l2"><b>🧩 Plugins</b><span>policy as code — deny or rewrite</span><span class="chip chip--mute">gate</span></div>
+<div class="bar bar--l3"><b>📦 Sandbox</b><span>caps what a mistake can cost</span><span class="chip chip--mute">contain</span></div>
+<div class="bar bar--l4"><b>📜 Audit</b><span>what actually happened, and when</span><span class="chip chip--mute">record</span></div>
+<div class="bar bar--l5"><b>✅ Review</b><span>was the output any good?</span><span class="chip chip--mute">judge</span></div>
 </div>
 
 <div class="abs-b mx-14 mb-5 text-sm italic op-60">Prompting is a suggestion. These are enforcement.</div>
 
 <!--
-Read outward from the call: what it may touch, checks around it, where it runs, who signs off, whether the result is any good. No single layer suffices — each catches what the others miss. Next slide zooms into the two innermost, because those are the programmable ones.
+Read top to bottom as the path of one request: two gates before the call, containment around it, a record after it, judgement on the result. Two deliberate changes from the usual list: human-in-the-loop is not its own layer — in OpenCode it IS the permission layer's "ask" — and audit is promoted to a first-class layer, because it's the only one that helps after something went wrong, and we build it in Part 1.
 -->
+
 
 ---
 
 # Two places to put policy
 
-<span class="text-sm op-60">Pillar 3 · Guardrails</span>
-
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.75}
 flowchart LR
   U["Prompt"] --> M["Model decides"]
   M --> P{{"Permission rules<br>allow · ask · deny"}}
-  P --> H2{{"tool.execute.before<br>deny · rewrite"}}
+  P --> H2{{"Plugin<br>deny · rewrite"}}
   H2 --> T["Tool executes"]
-  T --> H3{{"tool.execute.after<br>observes"}}
+  T --> H3{{"Plugin<br>observes"}}
   H3 --> R["Result"]
 ```
 
-<div class="grid grid-cols-2 gap-8 pt-2 text-sm">
-<div>
-
-**Two layers, and they are not interchangeable**
-
-- 📋 **Permission rules** — declarative, pattern-matched, reviewable. Where `ask` lives.
-- 🧩 **Plugins** — in-process TypeScript. Where *logic* lives: deny by throwing, or **rewrite the arguments** and let the call through.
-
-<span class="text-xs op-60">Reach for config when a pattern can say it.<br>Reach for code when it can't.</span>
-
+<div class="grid grid-cols-2 gap-5 pt-3">
+<div class="card card--ask">
+<span class="card-title">📋 Permission rules</span>
+Patterns · reviewable · where <code>ask</code> lives.
 </div>
-<div>
-
-```ts
-// .opencode/plugins/guard.ts
-export const Guard: Plugin = async () => ({
-  "tool.execute.before": async (input, output) => {
-    if (input.tool !== "bash") return
-    if (/rm -rf/.test(output.args.command))
-      throw new Error("Blocked by policy.")
-  },
-})
-```
-
-<span class="text-xs op-60">No stdin, no exit codes. <code>throw</code> is the verdict, and the message goes <i>to the model</i>.</span>
-
+<div class="card card--hook">
+<span class="card-title">🧩 Plugins</span>
+Logic · <code>throw</code> to deny · rewrite the args.
 </div>
 </div>
 
-<div class="abs-b mx-14 mb-5 text-sm italic op-60">Both sit below the model. This is enforcement, not advice.</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Config when a pattern can say it. Code when it can't.</div>
 
 <!--
-Top: where your code runs, in order — permission rules resolve first, then the plugin sees whatever survived. Left: the two-layer split is the single most useful idea in this deck, because most teams write a plugin for something a two-line config rule would have handled. Right: the whole protocol is a function that throws. Close on: enforcement below the model.
+Rules resolve first; the plugin sees only what survived. The split is the most useful idea on this slide: most teams write a plugin for something a two-line config rule would have handled. Both sit below the model — enforcement, not advice.
 -->
+
 
 ---
 
 # The same guardrail in four harnesses
 
-<span class="text-sm op-60">Pillar 3 · Guardrails</span>
+<div class="grid grid-cols-2 gap-5 pt-3">
 
-<div class="grid grid-cols-4 gap-3 pt-3 text-xs">
+<div class="family">
+<div class="eyebrow eyebrow--oc pb-1">In-process · TypeScript · throw / rewrite</div>
+<div class="grid grid-cols-2 gap-3 text-xs">
 
 <div class="p-3 rounded-lg" style="background: rgba(236,72,153,0.12); outline: 1px solid rgba(236,72,153,0.5)">
-<b class="text-sm">OpenCode <span class="op-60 font-normal">· today's harness</span></b><br>
-<span class="op-60">TypeScript plugins, in-process · <code>.opencode/plugins/</code> · deny = <b>throw</b> · <b>args are mutable</b></span>
-<div class="pt-2 font-mono leading-relaxed">tool.execute.before<br>tool.execute.after<br>chat.message · chat.params<br>shell.env<br>event (session.*,<br>&nbsp;&nbsp;permission.asked, ...)</div>
-<div class="pt-2 op-60">Plus a separate declarative <code>permission</code> config — that's where <code>ask</code> lives. ⚠️ the <code>permission.ask</code> <i>hook</i> is typed but doesn't fire.</div>
-</div>
-
-<div class="p-3 rounded-lg bg-amber-500/10">
-<b class="text-sm">Claude Code</b><br>
-<span class="op-60">settings.json → shell commands · stdin JSON · exit 2 blocks</span>
-<div class="pt-2 font-mono leading-relaxed">PreToolUse<br>PostToolUse<br>UserPromptSubmit<br>PermissionRequest<br>Stop · SubagentStop<br>SessionStart / End<br>Pre / PostCompact</div>
-<div class="pt-2 op-60">+ ~20 more (Notification, Setup, TaskCreated, ...). ⚠️ exit 1 fails <b>open</b>.</div>
-</div>
-
-<div class="p-3 rounded-lg bg-blue-500/10">
-<b class="text-sm">Codex CLI</b><br>
-<span class="op-60">hooks.json / [hooks] in config.toml · stdin JSON · exit 2 blocks</span>
-<div class="pt-2 font-mono leading-relaxed">PreToolUse<br>PostToolUse<br>UserPromptSubmit<br>PermissionRequest<br>Stop · SessionStart<br>SubagentStart / Stop<br>Pre / PostCompact</div>
-<div class="pt-2 op-60">Feature-flagged; stable since v0.124 (Apr 2026). <code>/hooks</code> browser in the TUI.</div>
+<b class="text-sm">OpenCode <span class="op-60 font-normal">· today</span></b><br>
+<span class="op-60"><code>.opencode/plugins/</code> · args are <b>mutable</b></span>
+<div class="pt-2 font-mono leading-relaxed">tool.execute.before<br>tool.execute.after<br>chat.message · chat.params<br>shell.env · event(...)</div>
+<div class="pt-2 op-60"><code>ask</code> lives in the <code>permission</code> config. ⚠️ the <code>permission.ask</code> hook doesn't fire.</div>
 </div>
 
 <div class="p-3 rounded-lg bg-gray-500/10">
 <b class="text-sm">Pi</b><br>
-<span class="op-60">TypeScript extensions, in-process · <code>.pi/extensions/</code> · <code>pi.on(...)</code></span>
-<div class="pt-2 font-mono leading-relaxed">tool_call → {block, reason}<br>turn_start / turn_end<br>session_start / end<br>agent_start<br>input · user_bash</div>
-<div class="pt-2 op-60">A crashing tool_call hook fails <b>closed</b> — opposite of the exit-1 footgun. Extensions add tools, commands, UI.</div>
+<span class="op-60"><code>.pi/extensions/</code> · verdict is a return value</span>
+<div class="pt-2 font-mono leading-relaxed">tool_call → {block, reason}<br>turn_start / turn_end<br>session_start / end<br>input · user_bash</div>
+<div class="pt-2 op-60">A crashing hook fails <b>closed</b>.</div>
+</div>
+
+</div>
+</div>
+
+<div class="family">
+<div class="eyebrow pb-1">Out-of-process · JSON + exit codes</div>
+<div class="grid grid-cols-2 gap-3 text-xs">
+
+<div class="p-3 rounded-lg bg-amber-500/10">
+<b class="text-sm">Claude Code</b><br>
+<span class="op-60">stdin JSON · exit 2 blocks</span>
+<div class="pt-2 font-mono leading-relaxed">PreToolUse<br>PostToolUse<br>UserPromptSubmit<br>Stop · SubagentStop<br>SessionStart / End</div>
+<div class="pt-2 op-60">+ ~25 more. ⚠️ exit 1 fails <b>open</b>.</div>
+</div>
+
+<div class="p-3 rounded-lg bg-blue-500/10">
+<b class="text-sm">Codex CLI</b><br>
+<span class="op-60">same wire protocol, adopted almost verbatim</span>
+<div class="pt-2 font-mono leading-relaxed">PreToolUse<br>PostToolUse<br>UserPromptSubmit<br>Stop · SessionStart<br>Pre / PostCompact</div>
+<div class="pt-2 op-60">One guard script serves both.</div>
+</div>
+
+</div>
 </div>
 
 </div>
 
-<div class="abs-b mx-14 mb-5 text-sm italic op-60">Two families: in-process TypeScript, or out-of-process JSON and exit codes. Same guardrail, four spellings.</div>
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Same guardrail, four spellings.</div>
 
 <!--
-The portability slide. Left pair: external scripts, language-agnostic, JSON over stdin, exit 2 blocks — Codex CLI converged on Claude Code's protocol almost verbatim, so one guard script serves both. Right pair: in-process TypeScript with richer power (mutate args, register tools) but runtime lock-in. Point at the two failure philosophies: Claude Code's exit 1 fails open, Pi's crashing hook fails closed — ask the room which default they'd ship.
+Left family: richer power (mutate args, register tools) but runtime lock-in and a crash takes the harness with it. Right family: language-agnostic isolation, one spawn per call. Two failure philosophies across the aisle: Pi fails closed, Claude Code's exit 1 fails open — ask which default they'd ship.
 -->
+
 
 ---
 
 # One request, end to end
 
-<span class="text-sm op-60">Putting it together</span>
+<div class="grid grid-cols-2 gap-8 pt-1 items-center">
+<div>
 
-```mermaid {scale: 0.5}
-flowchart LR
+```mermaid {scale: 0.62}
+flowchart TB
   Y((you)) --> A["Agent (model)"]
-  A -->|call| R{"permission rules"}
-  R -->|deny| A
+  A -->|tool call| R{"permission rules"}
   R -->|ask| P["🙋 approve?"]
-  P --> G{"plugin<br>tool.execute.before"}
-  R -->|allow| G
+  R -->|allow| G{"plugin"}
+  P --> G
   G -->|"throw + reason"| A
-  G -->|"rewrite / pass"| SB
+  G -->|"pass / rewrite"| SB
   subgraph SB["sandbox"]
-    B["Built-in tools"]
-    M2["MCP servers"]
+    direction LR
+    B["built-in tools"] ~~~ M2["MCP servers"]
   end
-  SB --> O{{"tool.execute.after<br>audit"}}
-  O -->|"result (untrusted)"| A
+  SB --> O{{"audit"}}
+  O -->|"result — untrusted"| A
 ```
 
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">Config decides first, then your code. Every result re-enters context as untrusted input.</div>
+</div>
+<div class="pl-2">
+
+<v-clicks>
+
+- Config decides first
+- Then your code — deny, or **rewrite**
+- Execution stays in the box
+- Everything is written down
+- The result re-enters as **untrusted input**
+
+</v-clicks>
+
+</div>
+</div>
 
 <!--
-Trace one request left to right: model proposes, the gate decides (allow / ask / deny with a reason the model can act on), execution happens inside an isolated boundary, and the observer logs everything on the way back. Whatever comes back re-enters the context as untrusted input. This exact shape is what they build next.
+Trace one request top to bottom: rules, then the plugin, then the sandboxed execution, then the record — and whatever comes back is untrusted input, which is the bridge back to the threat slide. This exact shape is what Part 1 builds.
+-->
+
+
+---
+
+# Sandboxing
+
+<div class="grid grid-cols-3 gap-4 pt-6">
+<div class="card card--mcp">
+<span class="card-title">📁 Filesystem</span>
+A throwaway worktree or container — nothing there you can't lose.
+</div>
+<div class="card card--mcp">
+<span class="card-title">🌐 Network</span>
+Egress allowlist — a secret can't leave through a URL.
+</div>
+<div class="card card--mcp">
+<span class="card-title">🔑 Credentials</span>
+Scoped, short-lived tokens — a key, not the keyring.
+</div>
+</div>
+
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Assume a guard fails. The sandbox decides what that costs.</div>
+
+<!--
+The containment layer: it doesn't decide anything, it just bounds the damage. Three axes — where it can write, where it can send, what it can authenticate as. OpenCode's external_directory permission (default: ask) is the filesystem axis showing up in config. Everything the lab does happens in a throwaway directory for exactly this reason.
+-->
+
+---
+
+# Review
+
+<div class="grid grid-cols-3 gap-4 pt-6">
+<div class="card card--allow">
+<span class="card-title">✅ Tests</span>
+Deterministic — the cheapest reviewer you'll ever hire.
+</div>
+<div class="card card--allow">
+<span class="card-title">🤖 Reviewer agent</span>
+A second model judging against a rubric, not vibes.
+</div>
+<div class="card card--allow">
+<span class="card-title">🙋 Human review</span>
+Still the gate for anything irreversible.
+</div>
+</div>
+
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Input guards catch bad calls. Review catches bad work.</div>
+
+<!--
+The judgement layer, on the output side. Every other layer inspects the call; this one inspects the result. Adversarial generator/verifier pairs are the strong version — a reviewer with a rubric and no stake in the code passing. If a room asks what to build first: tests, always tests.
 -->
 
 ---
 
 # Before you start
 
-<span class="text-sm op-60">Recap</span>
-
-<v-clicks>
-
-1. **Tools turn a model into an agent** — and every tool is a contract you design, not a detail.
-2. **MCP is the standard socket** — build a capability once, plug it into any agent or IDE.
-3. **Guardrails are layered** — permissions, hooks, sandboxes, human approval, verification.
-4. **Guardrails are deterministic** — config for patterns, plugins for logic; neither is negotiable.
-5. **Treat every tool result as untrusted input**, and grant least privilege by default.
-
-</v-clicks>
-
-<div class="mt-8 card card--hook">
-🏋️ <b>Up next: hands-on.</b> You build the guardrails <i>first</i> in OpenCode, then a tool server to put behind them, then you try to break your own setup.
+<div class="grid grid-cols-3 gap-4 pt-6">
+<div class="card"><b>Tools are contracts</b></div>
+<div class="card"><b>MCP: build once, plug anywhere</b></div>
+<div class="card"><b>Guardrails stack</b></div>
+<div class="card"><b>Config before code</b></div>
+<div class="card"><b>Least privilege</b></div>
+<div class="card"><b>Results are untrusted</b></div>
 </div>
 
 <!--
-Read the five, don't elaborate — each one maps to something they're about to do with their hands. Then move into the part slides.
+Six phrases, each one maps to something they're about to touch with their hands. Read them, don't elaborate, and go.
 -->
+
 
 ---
 layout: center
 class: text-center
 ---
 
-# What you'll build
+# Part 1 · Plugins
 
-<span class="op-60">Agent: <b>OpenCode</b></span>
+<span class="op-60">Agent: <b>OpenCode</b> · policy as code, in TypeScript</span>
 
-<div class="grid grid-cols-3 gap-4 pt-8 text-left">
-<div class="card card--oc">
-<span class="eyebrow eyebrow--oc">Part 1 · </span>
-<span class="card-title">Plugins</span>
-One TypeScript file, three powers: <b>deny</b> a destructive command, <b>rewrite</b> a dangerous one into a safe one, <b>observe</b> everything that runs.
+<div class="pt-8">
+<VerdictRail active="deny,rewrite,observe" />
 </div>
-<div class="card card--mcp">
-<span class="eyebrow eyebrow--mcp">Part 2 · </span>
-<span class="card-title">Build an MCP server</span>
-A ticket-tracker server OpenCode discovers and calls. Python, with TypeScript and Rust ports.
+
+<div class="grid grid-cols-3 gap-4 pt-5 text-left">
+<div class="card card--deny">
+<span class="card-title"><code>throw</code></span>
+<code>rm -rf</code>, <code>curl | sh</code>, and anything reaching for <code>.env</code>.
+</div>
+<div class="card card--ask">
+<span class="card-title"><code>output.args = ...</code></span>
+Strip <code>--no-verify</code> off a commit — the call runs, changed.
 </div>
 <div class="card card--allow">
-<span class="eyebrow eyebrow--allow">Part 3 · </span>
-<span class="card-title">Guard your own tools</span>
-Gate your own MCP tools — twice, by two different mechanisms, for two different reasons.
+<span class="card-title"><code>tool.execute.after</code></span>
+Every call in a JSONL trail you can <code>grep</code>.
 </div>
 </div>
 
-<div class="mt-5 card card--deny text-left">
-<span class="card-title">🐛 Bonus · Red team your own setup · </span>
-Hide a prompt injection inside a ticket, then find the hole your guardrails still have.
-</div>
-
-<div class="mt-4 text-xs op-50">Different agent? The same guard as a <b>Claude Code hook</b> and a <b>Pi extension</b> is in the appendix at the end; the server in <b>TypeScript</b> and <b>Rust</b> sits with Part 2.</div>
+<div class="mt-6 text-xs op-50">In the appendix: the same guard for <b>Claude Code</b> and <b>Pi</b>, and a full MCP lab — build a server, gate it, red-team it.</div>
 
 <!--
-Say why plugins come first: control is the thing people skip, and in OpenCode it's a single TypeScript file with no protocol to get wrong. By the time anyone builds a tool in Ex2, the cage already exists.
+One file in .opencode/plugins/, no stdin, no exit codes, no protocol to get wrong. Flag the middle card now: rewriting a call is the thing OpenCode makes trivial and most harnesses make hard. The MCP material lives in the appendix for rooms that want to keep going.
 -->
 
 ---
 
 # Part 0 · Setup
-
-<span class="eyebrow">Do the left column now. Start the right one too — the install takes a while.</span>
-
-<div class="grid grid-cols-2 gap-6 pt-3">
-<div>
-
-<div class="eyebrow eyebrow--oc">Needed for Part 1 · plugins</div>
 
 OpenCode installed and authenticated · `git`
 
@@ -525,70 +519,19 @@ mkdir -p .opencode/plugins
 echo "SECRET_API_KEY=do-not-leak-me" > .env
 ```
 
-<div class="card card--deny mt-3">
+<div class="grid grid-cols-2 gap-5 mt-4">
+<div class="card card--deny">
 Throwaway directory only. Never point a guardrails workshop at a repo you care about.
 </div>
-
-</div>
-<div>
-
-<div class="eyebrow eyebrow--mcp">Needed for Part 2 · MCP</div>
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate    # Win: .venv\Scripts\activate
-pip install "mcp[cli]>=1.2,<2"
-```
-
-<div class="card card--mcp mt-3">
-The <code>&lt;2</code> pin matters: v2 of the MCP Python SDK is a pre-release with a different API. Everything here uses the stable v1 <code>FastMCP</code> interface.
-</div>
-
-<div class="checkpoint mt-3">
-<b>✅ Checkpoint</b> — <code>opencode --version</code> works, and <code>python -c "from mcp.server.fastmcp import FastMCP; print('ok')"</code> prints <code>ok</code>.
-</div>
-
+<div class="checkpoint">
+<b>✅ Checkpoint</b> — <code>opencode --version</code> works.
 </div>
 </div>
 
-<div class="footnote mt-3">No Node or Bun install needed for the plugins — OpenCode bundles a Bun runtime and loads <code>.ts</code> files from the plugin directory directly.</div>
+<div class="footnote mt-3">No Node or Bun install needed — OpenCode bundles a Bun runtime and loads <code>.ts</code> plugins directly.</div>
 
 <!--
-Split deliberately: Part 1 needs nothing but OpenCode and a directory. Tell people to kick off the venv install and move on — we won't touch it for half an hour. The .env file is bait: protected in Ex1, attacked in the bonus.
--->
-
----
-layout: center
-class: text-center
----
-
-# Part 1 · Plugins
-
-<span class="op-60"> · policy as code, in-process, in TypeScript</span>
-
-<div class="pt-8">
-<VerdictRail active="deny,rewrite,observe" />
-</div>
-
-<div class="grid grid-cols-3 gap-4 pt-5 text-left">
-<div class="card card--deny">
-<span class="card-title"><code>throw</code></span>
-<code>rm -rf</code>, <code>curl | sh</code>, and anything reaching for <code>.env</code> through the back door.
-</div>
-<div class="card card--ask">
-<span class="card-title"><code>output.args = ...</code></span>
-Strip <code>--no-verify</code> off a commit. The call still runs — just not the way the model wrote it.
-</div>
-<div class="card card--allow">
-<span class="card-title"><code>tool.execute.after</code></span>
-Every call appended to a JSONL trail you can <code>grep</code>.
-</div>
-</div>
-
-<div class="mt-7 text-sm op-60">One file in <code>.opencode/plugins/</code>. No stdin, no exit codes, no JSON protocol to get wrong.</div>
-
-<!--
-Frame the arc. Flag the middle one now: rewriting a tool call is the thing OpenCode makes trivial and most harnesses make hard, and it's usually better UX than refusing. Note the missing fourth verdict — "ask" — and promise we'll get to where it actually lives.
+Part 1 needs nothing but OpenCode and a directory. The .env file is bait: protected in Part 1, attacked in the appendix's red-team round. The MCP prerequisites moved to their own slide in the appendix, right before the server lab.
 -->
 
 ---
@@ -832,8 +775,6 @@ if (input.tool === "bash") {
 }
 ```
 
-<span class="text-xs op-60">Destructure <code>client</code> out of the plugin context to use it.</span>
-
 </div>
 <div>
 
@@ -906,7 +847,7 @@ The only layer that helps <i>after</i> something goes wrong.
 
 <div class="card card--mcp mb-3">
 <span class="card-title">It also names your tools</span>
-The <code>tool</code> field prints the exact string OpenCode uses. Part 2 needs it — no guessing at prefixes.
+The <code>tool</code> field prints the exact string OpenCode uses. MCP tools will land here under their real names.
 </div>
 
 <div class="card card--ask">
@@ -1032,6 +973,210 @@ The denied calls aren't in your audit log. Is that the right design? What would 
 
 <!--
 Row 5 is the interesting one: the permission config denies "rm *" AND the plugin throws. Ask which fired first — the permission check runs before the tool executes, so the config wins and the plugin never sees it. That's the honest answer to "which layer caught it", and it's why the audit log alone can't tell you.
+-->
+
+---
+
+# What you built
+
+<div class="grid grid-cols-2 gap-7 pt-2">
+<div>
+
+<div class="eyebrow eyebrow--oc">Control · Part 1</div>
+
+| Concept | Where you touched it |
+|---|---|
+| Deterministic enforcement | `throw` in `tool.execute.before` |
+| Errors are information | The message the model reads |
+| Rewriting beats refusing | Stripping `--no-verify` |
+| Human in the loop | `permission: "ask"` |
+| Config vs. code | Which mechanism, and why |
+| Audit & observability | `audit.ts`, `.opencode/audit.log` |
+| Portability of policy | The appendix ports, unchanged |
+
+</div>
+<div>
+
+<div class="eyebrow eyebrow--mcp">Capability · appendix</div>
+
+| Concept | Where you touched it |
+|---|---|
+| Tools = name + description + schema | Docstrings & type hints |
+| Description-as-prompt | *"NEW issues only"* |
+| Client/server, stdio transport | The `mcp` block, `opencode.json` |
+| `<server>_<tool>` naming | Read out of your own audit log |
+| Defense in depth | Client gate **and** `protected` flag |
+| Untrusted tool output | The bonus round |
+| A guardrail that never fires | `permission.ask` |
+
+</div>
+</div>
+
+<div class="mt-5 text-center text-sm op-70">Every row is a slide you now have muscle memory for.</div>
+
+<!--
+Close the loop. Note the split: the left column existed before the right column did, which is the argument for the ordering of this whole lab.
+-->
+
+---
+layout: center
+class: text-center
+---
+
+# Appendix
+
+<div class="grid grid-cols-2 gap-5 pt-10 text-left">
+<div class="card">
+<span class="card-title">Other harnesses</span>
+The same guard in <b>Claude Code</b> and <b>Pi</b> — the regexes never change, only the wiring.
+</div>
+<div class="card card--mcp">
+<span class="card-title">The MCP lab</span>
+Build a ticket server, gate your own tools, then red-team the whole setup.
+</div>
+</div>
+
+<!--
+Two independent tracks. The harness ports answer "does any of this transfer?". The MCP lab is Parts 2 and 3 plus the red-team round, for rooms that keep going.
+-->
+
+---
+
+# The same guard in Claude Code
+
+<span class="eyebrow eyebrow--oc"><b>Appendix</b> — out-of-process, exit codes</span>
+
+<div class="grid grid-cols-2 gap-7 pt-1">
+<div>
+
+Claude Code spawns a program and speaks JSON over stdin. Any language works:
+
+```python
+#!/usr/bin/env python3
+"""PreToolUse guardrail. Register in .claude/settings.json."""
+import json, re, sys
+
+DANGEROUS = [
+    (r"\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)", "rm -rf"),
+    (r"\bgit\s+push\b.*(--force|-f)\b",         "force push"),
+    (r"\.env\b",                                 "touching .env"),
+]
+
+data = json.load(sys.stdin)
+if data.get("tool_name") == "Bash":
+    cmd = (data.get("tool_input") or {}).get("command", "")
+    for pattern, reason in DANGEROUS:
+        if re.search(pattern, cmd, re.IGNORECASE):
+            print(f"Blocked by policy: {reason}.", file=sys.stderr)
+            sys.exit(2)     # 2 blocks. 1 does NOT.
+sys.exit(0)
+```
+
+</div>
+<div>
+
+<div class="card card--deny mb-3">
+<span class="card-title">The footgun</span>
+Only <code>exit 2</code> blocks. <code>exit 1</code> lets the tool run — and an uncaught exception exits 1, so a crashing guard fails <i>open</i>.
+</div>
+
+<div class="card card--allow mb-3">
+<span class="card-title">What you gain</span>
+Process isolation, any language, and a fourth verdict — <code>ask</code> — inside the hook itself.
+</div>
+
+<div class="card">
+<span class="card-title">What you lose</span>
+A process spawn per call, and no easy rewrite.
+</div>
+
+</div>
+</div>
+
+<!--
+Two families: out-of-process JSON and exit codes (Claude Code, Codex CLI adopted the same wire protocol almost verbatim) vs in-process TypeScript (OpenCode, Pi). Same policy table, different spelling. Ask the room which failure mode they'd rather own — a crashed subprocess that fails open, or a crashed plugin that takes the harness with it.
+-->
+
+---
+
+# The same guard in Pi
+
+<span class="eyebrow eyebrow--oc"><b>Appendix</b> — in-process, return values</span>
+
+<div class="grid grid-cols-2 gap-7 pt-1">
+<div>
+
+Pi loads extensions from `.pi/extensions/` — one default-exported function wiring into `pi.on(...)`:
+
+```ts
+// .pi/extensions/guard.ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)/i, "rm -rf"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+];
+
+export default function (pi: ExtensionAPI) {
+  pi.on("tool_call", async (event, ctx) => {
+    if (event.toolName !== "bash") return;
+    const cmd = String(event.input.command ?? "");
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        return { block: true, reason: `Blocked by policy: ${why}.` };
+  });
+}
+```
+
+</div>
+<div>
+
+<div class="card card--allow mb-3">
+<span class="card-title">The verdict is a return value</span>
+<code>{ block: true, reason }</code> — no exit codes, no throwing, no stdout parsing. Arguably the cleanest of the three.
+</div>
+
+<div class="card card--deny mb-3">
+<span class="card-title">It fails closed</span>
+A crashing <code>tool_call</code> hook <b>blocks</b> the tool. The opposite of Claude Code's exit-1, and the opposite of most defaults.
+</div>
+
+<div class="card card--oc">
+<span class="card-title">What actually ported</span>
+The regexes never changed. Only the wiring did — which is the argument for keeping policy in data.
+</div>
+
+</div>
+</div>
+
+<!--
+Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
+-->
+
+---
+
+# MCP setup
+
+Needed for the lab below · Python 3.10+
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate    # Win: .venv\Scripts\activate
+pip install "mcp[cli]>=1.2,<2"
+```
+
+<div class="grid grid-cols-2 gap-5 mt-4">
+<div class="card card--mcp">
+The <code>&lt;2</code> pin matters: v2 of the MCP Python SDK is a pre-release with a different API. Everything here uses the stable v1 <code>FastMCP</code> interface.
+</div>
+<div class="checkpoint">
+<b>✅ Checkpoint</b> — <code>python -c "from mcp.server.fastmcp import FastMCP; print('ok')"</code> prints <code>ok</code>.
+</div>
+</div>
+
+<!--
+Kick the pip install off before reading on — it's the only slow step in the lab.
 -->
 
 ---
@@ -1546,189 +1691,6 @@ Creating it is harmless. It's just data — until something reads it.
 
 <!--
 Outcomes vary by model mood, and that variance IS the lesson: probabilistic judgement plus deterministic gates. The subagent question is the sharpest one — plugin coverage of task-spawned calls has been inconsistent historically, and "I tested it in the main loop" is exactly how a guardrail gets shipped with a hole. Let a few teams report what they found.
--->
-
----
-
-# What you built
-
-<div class="grid grid-cols-2 gap-7 pt-2">
-<div>
-
-<div class="eyebrow eyebrow--oc">Control · Part 1</div>
-
-| Concept | Where you touched it |
-|---|---|
-| Deterministic enforcement | `throw` in `tool.execute.before` |
-| Errors are information | The message the model reads |
-| Rewriting beats refusing | Stripping `--no-verify` |
-| Human in the loop | `permission: "ask"` |
-| Config vs. code | Which mechanism, and why |
-| Audit & observability | `audit.ts`, `.opencode/audit.log` |
-| Portability of policy | The appendix ports, unchanged |
-
-</div>
-<div>
-
-<div class="eyebrow eyebrow--mcp">Capability · Parts 2 & 3</div>
-
-| Concept | Where you touched it |
-|---|---|
-| Tools = name + description + schema | Docstrings & type hints |
-| Description-as-prompt | *"NEW issues only"* |
-| Client/server, stdio transport | The `mcp` block, `opencode.json` |
-| `<server>_<tool>` naming | Read out of your own audit log |
-| Defense in depth | Client gate **and** `protected` flag |
-| Untrusted tool output | The bonus round |
-| A guardrail that never fires | `permission.ask` |
-
-</div>
-</div>
-
-<div class="mt-5 text-center text-sm op-70">Every row is a slide you now have muscle memory for.</div>
-
-<!--
-Close the loop. Note the split: the left column existed before the right column did, which is the argument for the ordering of this whole lab.
--->
-
----
-layout: center
-class: text-center
----
-
-# Appendix · Other harnesses
-
-<span class="op-60">The same policy table, in the two other agents people bring to this room</span>
-
-<div class="grid grid-cols-2 gap-5 pt-10 text-left">
-<div class="card">
-<span class="card-title">Claude Code</span>
-Out-of-process: JSON on stdin, verdict as an exit code, and <code>ask</code> inside the hook.
-</div>
-<div class="card">
-<span class="card-title">Pi</span>
-In-process TypeScript like OpenCode, but the verdict is a return value, and a crashing hook fails <b>closed</b>.
-</div>
-</div>
-
-<div class="mt-8 text-sm op-60">The regexes never change. Only the wiring does.</div>
-
-<!--
-Use these if someone in the room isn't on OpenCode, or as the answer to "does any of this transfer?". Both slides are self-contained, so you can jump straight to either one.
--->
-
----
-
-# The same guard in Claude Code
-
-<span class="eyebrow eyebrow--oc"><b>Appendix</b> — out-of-process, exit codes</span>
-
-<div class="grid grid-cols-2 gap-7 pt-1">
-<div>
-
-Claude Code spawns a program and speaks JSON over stdin. Any language works:
-
-```python
-#!/usr/bin/env python3
-"""PreToolUse guardrail. Register in .claude/settings.json."""
-import json, re, sys
-
-DANGEROUS = [
-    (r"\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)", "rm -rf"),
-    (r"\bgit\s+push\b.*(--force|-f)\b",         "force push"),
-    (r"\.env\b",                                 "touching .env"),
-]
-
-data = json.load(sys.stdin)
-if data.get("tool_name") == "Bash":
-    cmd = (data.get("tool_input") or {}).get("command", "")
-    for pattern, reason in DANGEROUS:
-        if re.search(pattern, cmd, re.IGNORECASE):
-            print(f"Blocked by policy: {reason}.", file=sys.stderr)
-            sys.exit(2)     # 2 blocks. 1 does NOT.
-sys.exit(0)
-```
-
-</div>
-<div>
-
-<div class="card card--deny mb-3">
-<span class="card-title">The footgun</span>
-Only <code>exit 2</code> blocks. <code>exit 1</code> lets the tool run — and an uncaught exception exits 1, so a crashing guard fails <i>open</i>.
-</div>
-
-<div class="card card--allow mb-3">
-<span class="card-title">What you gain</span>
-Process isolation, any language, and a fourth verdict — <code>ask</code> — inside the hook itself.
-</div>
-
-<div class="card">
-<span class="card-title">What you lose</span>
-A process spawn per call, and no easy rewrite.
-</div>
-
-</div>
-</div>
-
-<!--
-Two families: out-of-process JSON and exit codes (Claude Code, Codex CLI adopted the same wire protocol almost verbatim) vs in-process TypeScript (OpenCode, Pi). Same policy table, different spelling. Ask the room which failure mode they'd rather own — a crashed subprocess that fails open, or a crashed plugin that takes the harness with it.
--->
-
----
-
-# The same guard in Pi
-
-<span class="eyebrow eyebrow--oc"><b>Appendix</b> — in-process, return values</span>
-
-<div class="grid grid-cols-2 gap-7 pt-1">
-<div>
-
-Pi loads extensions from `.pi/extensions/` — one default-exported function wiring into `pi.on(...)`:
-
-```ts
-// .pi/extensions/guard.ts
-import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
-
-const DENY: [RegExp, string][] = [
-  [/\brm\b(?=.*\s-[a-z]*r)(?=.*\s-[a-z]*f)/i, "rm -rf"],
-  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
-  [/\.env\b/, "touching .env"],
-];
-
-export default function (pi: ExtensionAPI) {
-  pi.on("tool_call", async (event, ctx) => {
-    if (event.toolName !== "bash") return;
-    const cmd = String(event.input.command ?? "");
-    for (const [re, why] of DENY)
-      if (re.test(cmd))
-        return { block: true, reason: `Blocked by policy: ${why}.` };
-  });
-}
-```
-
-</div>
-<div>
-
-<div class="card card--allow mb-3">
-<span class="card-title">The verdict is a return value</span>
-<code>{ block: true, reason }</code> — no exit codes, no throwing, no stdout parsing. Arguably the cleanest of the three.
-</div>
-
-<div class="card card--deny mb-3">
-<span class="card-title">It fails closed</span>
-A crashing <code>tool_call</code> hook <b>blocks</b> the tool. The opposite of Claude Code's exit-1, and the opposite of most defaults.
-</div>
-
-<div class="card card--oc">
-<span class="card-title">What actually ported</span>
-The regexes never changed. Only the wiring did — which is the argument for keeping policy in data.
-</div>
-
-</div>
-</div>
-
-<!--
-Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
 -->
 
 ---

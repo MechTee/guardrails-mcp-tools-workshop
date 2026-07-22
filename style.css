@@ -288,3 +288,58 @@
 .rule-body { font-size: 0.85rem; line-height: 1.4; }
 .rule-body b { display: block; }
 .rule-body span { opacity: 0.65; font-size: 0.78rem; }
+
+/* --- horizontal defence bars (the "where guardrails go" slide) -------- */
+
+.bars { display: flex; flex-direction: column; gap: 0.55rem; }
+
+.bar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.9rem;
+  border-radius: 0.55rem;
+  padding: 0.62rem 1rem;
+  border-left: 4px solid rgba(var(--vd-mute), 0.5);
+  background: rgba(var(--vd-mute), 0.08);
+}
+
+.bar b { font-size: 0.95rem; white-space: nowrap; }
+.bar span { font-size: 0.82rem; opacity: 0.7; }
+.bar .chip { margin-left: auto; }
+
+.bar--l1 { border-left-color: rgb(var(--vd-oc));    background: rgba(var(--vd-oc), 0.09); }
+.bar--l2 { border-left-color: rgb(var(--vd-hook));  background: rgba(var(--vd-hook), 0.09); }
+.bar--l3 { border-left-color: rgb(var(--vd-mcp));   background: rgba(var(--vd-mcp), 0.09); }
+.bar--l4 { border-left-color: rgb(var(--vd-allow)); background: rgba(var(--vd-allow), 0.09); }
+.bar--l5 { border-left-color: rgb(var(--vd-ask));   background: rgba(var(--vd-ask), 0.09); }
+
+/* --- tall threat columns ---------------------------------------------- */
+
+.tcol {
+  border-radius: 0.55rem;
+  padding: 0.7rem 0.8rem;
+  border-top: 3px solid rgba(var(--vd-mute), 0.5);
+  background: rgba(var(--vd-mute), 0.08);
+  height: 100%;
+}
+
+.tcol b { display: block; font-size: 0.9rem; margin-bottom: 0.35rem; }
+.tcol i { display: block; font-style: normal; font-size: 0.76rem; opacity: 0.75; line-height: 1.4; margin-top: 0.3rem; }
+
+.tcol--deny  { border-top-color: rgb(var(--vd-deny));  background: rgba(var(--vd-deny), 0.09); }
+.tcol--ask   { border-top-color: rgb(var(--vd-ask));   background: rgba(var(--vd-ask), 0.09); }
+.tcol--hook  { border-top-color: rgb(var(--vd-hook));  background: rgba(var(--vd-hook), 0.09); }
+.tcol--mcp   { border-top-color: rgb(var(--vd-mcp));   background: rgba(var(--vd-mcp), 0.09); }
+
+/* --- family grouping on the four-harness slide ------------------------ */
+
+.family {
+  border-radius: 0.7rem;
+  padding: 0.7rem;
+  background: rgba(var(--vd-mute), 0.06);
+  outline: 1px solid rgba(var(--vd-mute), 0.22);
+}
+
+/* --- one big code sample ---------------------------------------------- */
+
+.bigcode pre { font-size: 1.02em !important; line-height: 1.6; }
