@@ -1,13 +1,13 @@
 # Guardrails, MCP & Tools — Workshop Slides
 
-A [Slidev](https://sli.dev) deck for the workshop **"Guardrails, MCP & Tools in Agentic Engineering"** — giving coding agents real capabilities and keeping them on the rails.
+A [Slidev](https://sli.dev) deck for the workshop **"Guardrails, MCP & Tools in Agentic Engineering"** — giving coding agents real capabilities and keeping them on the rails. The hands-on lab is built on **OpenCode**.
 
-- **Theory (≈ 12 min):** tools as typed contracts, MCP architecture, threat model, layered guardrails, hooks — including a hook-event comparison across Claude Code, Codex CLI, OpenCode, and Pi.
-- **Hands-on lab (≈ 60–75 min):** control first, then capability.
-  1. **Hooks (≈ 30 min)** — one exercise, three verdicts: a `PreToolUse` hook that **denies** destructive commands and secret access, one that **asks** a human before anything irreversible, and a `PostToolUse` hook that **observes** into a JSONL audit trail. Ported to an OpenCode plugin and a Pi extension.
-  2. **Ship a tool via MCP (≈ 20 min)** — a ticket-tracker server in Python, with TypeScript and Rust ports.
-  3. **Compose (≈ 10 min)** — point the guardrails from step 1 at the tools from step 2 by editing a single matcher, then argue about defense in depth.
-  4. **Bonus (≈ 10 min)** — red-team it, including the `@`-reference gap that walks straight past a `Read` hook.
+- **Theory (≈ 12 min):** tools as typed contracts, MCP architecture, threat model, layered guardrails — including a guardrail comparison across OpenCode, Claude Code, Codex CLI, and Pi.
+- **Hands-on lab (≈ 60–75 min), built on [OpenCode](https://opencode.ai):** control first, then capability.
+  1. **Plugins (≈ 30 min)** — one TypeScript file in `.opencode/plugins/`, three powers: **deny** by throwing, **rewrite** the tool arguments so a dangerous call becomes a safe one, and **observe** into a JSONL audit trail. Plus the fourth verdict you *don't* write code for — the declarative `permission` config, which is where `ask` actually lives. The same policy, wired for Claude Code and Pi, is in an appendix at the end of the deck.
+  2. **Build an MCP server (≈ 20 min)** — a ticket-tracker server in Python, registered from `opencode.json`, with TypeScript and Rust ports.
+  3. **Guarding your own tools (≈ 10 min)** — gate your own MCP tools two different ways and argue about which one belongs in a pull request.
+  4. **Bonus (≈ 10 min)** — red-team it: prompt injection through a tool result, the subagent path, and the rewrite the model can't see.
 - [`exercises.md`](./exercises.md) — the same lab as a self-contained handout for participants.
 
 ## Usage

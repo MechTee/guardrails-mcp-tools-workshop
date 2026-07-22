@@ -8,3 +8,4 @@ components.d.ts
 
 # workshop artifacts participants generate
 .claude/audit.log
+.opencode/audit.log
