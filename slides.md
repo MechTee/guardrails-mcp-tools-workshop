@@ -832,6 +832,8 @@ if (input.tool === "bash") {
 }
 ```
 
+<span class="text-xs op-60">Destructure <code>client</code> out of the plugin context to use it.</span>
+
 </div>
 <div>
 
