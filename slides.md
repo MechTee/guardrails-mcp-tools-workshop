@@ -51,7 +51,7 @@ Welcome (60s). Frame: agentic engineering means the model doesn't just write cod
 </div>
 <div>
 
-```mermaid {scale: 0.8}
+```mermaid {scale: 0.7}
 flowchart TB
   A["1 · Model decides"] --> B["2 · Emits a tool call"]
   B --> C["3 · Harness executes"]
@@ -165,7 +165,7 @@ model call → validate → execute → observe
 
 **Without MCP**
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.45}
 flowchart LR
   CC[Claude Code] --- GH[GitHub]
   CC --- DB[(Database)]
@@ -185,7 +185,7 @@ flowchart LR
 
 **With MCP**
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.45}
 flowchart LR
   CC[Claude Code] --- M{{MCP}}
   IDE[IDE agent] --- M
@@ -214,13 +214,13 @@ flowchart LR
 
 <span class="text-sm op-60">Pillar 2 · MCP</span>
 
-```mermaid {scale: 0.62}
+```mermaid {scale: 0.5}
 flowchart LR
-  subgraph host["Host · Claude Code / IDE / desktop app  (+ built-in tools, permissions, hooks)"]
+  subgraph host["Host · Claude Code / IDE  (+ permissions, hooks)"]
     A["Agent (model)"] <--> C["MCP client"]
   end
-  C <-- "stdio · local child process" --> T["tickets — your server<br>≈40 lines of Python<br><i>list_tickets · create · delete</i>"]
-  C <-- "streamable HTTP · remote" --> G["GitHub — someone else's server<br><i>issues · pull requests · search</i>"]
+  C <-- "stdio · local" --> T["tickets — your server<br>≈40 lines of Python"]
+  C <-- "HTTP · remote" --> G["GitHub — someone<br>else's server"]
 ```
 
 <div class="grid grid-cols-3 gap-4 pt-2 text-sm">
@@ -305,14 +305,14 @@ flowchart LR
 
 <span class="text-sm op-60">Pillar 3 · Guardrails</span>
 
-```mermaid {scale: 0.7}
+```mermaid {scale: 0.55}
 flowchart LR
-  U["User prompt"] --> H1{{"UserPromptSubmit"}}
+  U["Prompt"] --> H1{{"UserPromptSubmit"}}
   H1 --> M["Model decides"]
-  M --> H2{{"PreToolUse<br>can block · ask · allow"}}
+  M --> H2{{"PreToolUse<br>block · ask · allow"}}
   H2 --> T["Tool executes"]
   T --> H3{{"PostToolUse<br>observes"}}
-  H3 --> R["Result → model"]
+  H3 --> R["Result"]
 ```
 
 <div class="grid grid-cols-2 gap-8 pt-2 text-sm">
@@ -351,27 +351,71 @@ flowchart LR
 
 ---
 
+# One idea, four dialects — hook events across clients
+
+<span class="text-sm op-60">Pillar 3 · Guardrails</span>
+
+<div class="grid grid-cols-4 gap-3 pt-3 text-xs">
+
+<div class="p-3 rounded-lg bg-amber-500/10">
+<b class="text-sm">Claude Code</b><br>
+<span class="op-60">settings.json → shell commands · stdin JSON · exit 2 blocks</span>
+<div class="pt-2 font-mono leading-relaxed">PreToolUse<br>PostToolUse<br>UserPromptSubmit<br>PermissionRequest<br>Stop · SubagentStop<br>SessionStart / End<br>Pre / PostCompact</div>
+<div class="pt-2 op-60">+ ~20 more (Notification, Setup, TaskCreated, ...). ⚠️ exit 1 fails <b>open</b>.</div>
+</div>
+
+<div class="p-3 rounded-lg bg-blue-500/10">
+<b class="text-sm">Codex CLI</b><br>
+<span class="op-60">hooks.json / [hooks] in config.toml · stdin JSON · exit 2 blocks</span>
+<div class="pt-2 font-mono leading-relaxed">PreToolUse<br>PostToolUse<br>UserPromptSubmit<br>PermissionRequest<br>Stop · SessionStart<br>SubagentStart / Stop<br>Pre / PostCompact</div>
+<div class="pt-2 op-60">Feature-flagged; stable since v0.124 (Apr 2026). <code>/hooks</code> browser in the TUI.</div>
+</div>
+
+<div class="p-3 rounded-lg bg-teal-500/10">
+<b class="text-sm">OpenCode</b><br>
+<span class="op-60">TypeScript plugins, in-process · <code>.opencode/plugins/</code> · block = <b>throw</b></span>
+<div class="pt-2 font-mono leading-relaxed">tool.execute.before<br>tool.execute.after<br>chat.message<br>chat.params<br>permission.ask<br>event (session.*,<br>&nbsp;&nbsp;file.edited, ...)</div>
+<div class="pt-2 op-60">Plugins can also register whole new tools — beyond gating.</div>
+</div>
+
+<div class="p-3 rounded-lg bg-gray-500/10">
+<b class="text-sm">Pi</b><br>
+<span class="op-60">TypeScript extensions, in-process · <code>.pi/extensions/</code> · <code>pi.on(...)</code></span>
+<div class="pt-2 font-mono leading-relaxed">tool_call → {block, reason}<br>turn_start / turn_end<br>session_start / end<br>agent_start<br>input · user_bash</div>
+<div class="pt-2 op-60">A crashing tool_call hook fails <b>closed</b> — opposite of the exit-1 footgun. Extensions add tools, commands, UI.</div>
+</div>
+
+</div>
+
+<div class="abs-b mx-14 mb-5 text-sm italic op-60">Two families: out-of-process JSON + exit codes (Claude Code, Codex CLI adopted the same wire protocol) vs in-process TypeScript (OpenCode, Pi). Same guardrail, four spellings.</div>
+
+<!--
+~70s. The portability slide. Left pair: external scripts, language-agnostic, JSON over stdin, exit 2 blocks — Codex CLI converged on Claude Code's protocol almost verbatim, so one guard script serves both. Right pair: in-process TypeScript with richer power (mutate args, register tools) but runtime lock-in. Point at the two failure philosophies: Claude Code's exit 1 fails open, Pi's crashing hook fails closed — ask the room which default they'd ship.
+-->
+
+---
+
 # One request through a guarded agent
 
 <span class="text-sm op-60">Putting it together</span>
 
-```mermaid {scale: 0.62}
+```mermaid {scale: 0.5}
 flowchart LR
   Y((you)) --> A["Agent (model)"]
-  A -->|tool call| G{"PreToolUse"}
-  G -->|"deny — reason goes back to the model"| A
-  G -->|"ask"| P["🙋 a human approves"]
+  A -->|call| G{"PreToolUse"}
+  G -->|"deny + reason"| A
+  G -->|ask| P["🙋 approve?"]
   P --> SB
-  G -->|"allow"| SB
-  subgraph SB["sandbox / isolated environment"]
-    B["Built-in tools<br>Read · Bash · Edit"]
-    M2["MCP servers<br>tickets · GitHub · ..."]
+  G -->|allow| SB
+  subgraph SB["sandbox"]
+    B["Built-in tools"]
+    M2["MCP servers"]
   end
-  SB --> O{{"PostToolUse<br>audit · validate"}}
-  O -->|"result → context — ⚠️ untrusted input"| A
+  SB --> O{{"PostToolUse<br>audit"}}
+  O -->|"result (untrusted)"| A
 ```
 
-<div class="abs-b mx-14 mb-6 text-sm italic op-60">Every action crosses gates you control — allow, ask, or deny on the way in; audit and validate on the way out.</div>
+<div class="abs-b mx-14 mb-6 text-sm italic op-60">Allow, ask, or deny on the way in — the deny reason goes back to the model. Audit on the way out — and every result re-enters context as untrusted input.</div>
 
 <!--
 ~60s. Trace one request left to right: model proposes, the gate decides (allow / ask / deny with a reason the model can act on), execution happens inside an isolated boundary, and the observer logs everything on the way back. Whatever comes back re-enters the context as untrusted input. This exact shape is what they build next.
@@ -418,7 +462,7 @@ class: text-center
 
 <div class="mt-6 text-sm op-70">🐛 <b>Bonus · Red team (≈ 10 min):</b> hide a prompt injection inside a ticket — and watch which of your guardrails catches it.</div>
 
-<div class="mt-4 text-xs op-50">Using a different agent? The concepts transfer 1:1 — in OpenCode, Ex 2/3 map to a plugin's <code>tool.execute.before</code> hook, MCP servers live in <code>opencode.json</code>. The server itself is client-agnostic by design.</div>
+<div class="mt-4 text-xs op-50">Different agent? Everything here transfers — including full versions of the guard hook as an <b>OpenCode plugin</b> and a <b>Pi extension</b>, and the server in <b>TypeScript</b> & <b>Rust</b>, on the slides ahead.</div>
 
 <!--
 ~40s. Three builds, one attack. Ex1 = capability, Ex2 = control, Ex3 = both on the same wire, bonus = adversarial thinking. Docs: code.claude.com/docs (hooks, mcp) and modelcontextprotocol.io.
@@ -571,6 +615,105 @@ Fast finishers do the stretch; it sets up the tools-vs-resources distinction fro
 
 ---
 
+# Exercise 1 · Polyglot corner — TypeScript <span class="text-base op-50">optional</span>
+
+The protocol is the contract; the language is your choice. Same server on the official TS SDK (`npm i @modelcontextprotocol/sdk zod`):
+
+```ts {maxHeight:'280px'}
+// tickets.ts — run with: node --experimental-strip-types tickets.ts
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+
+const server = new McpServer({ name: "tickets", version: "1.0.0" });
+
+type Ticket = { id: number; title: string; status: string; protected: boolean };
+const TICKETS = new Map<number, Ticket>([
+  [1, { id: 1, title: "Fix login redirect bug", status: "open", protected: false }],
+  [2, { id: 2, title: "Rotate production API keys", status: "open", protected: true }],
+]);
+let nextId = 3;
+
+server.registerTool(
+  "list_tickets",
+  { description: "List all tickets with id, title, status and protection flag." },
+  async () => ({ content: [{ type: "text", text: JSON.stringify([...TICKETS.values()]) }] }),
+);
+
+server.registerTool(
+  "create_ticket",
+  {
+    description: "Create a new ticket. Use for NEW issues only, not for editing existing ones.",
+    inputSchema: { title: z.string() },
+  },
+  async ({ title }) => {
+    const ticket: Ticket = { id: nextId++, title, status: "open", protected: false };
+    TICKETS.set(ticket.id, ticket);
+    return { content: [{ type: "text", text: JSON.stringify(ticket) }] };
+  },
+);
+
+await server.connect(new StdioServerTransport());
+```
+
+Same three ideas, new syntax: the **description** steers, the **zod schema** validates, errors return **as strings**. Register: `claude mcp add tickets-ts -- node --experimental-strip-types "$(pwd)/tickets.ts"` — porting `delete_ticket` is your warm-up.
+
+<!--
+Verified against SDK 1.29: type-checks strict and runs on stdio. registerTool takes (name, {description, inputSchema: zod raw shape}, handler). Node 22+ runs .ts directly with --experimental-strip-types — no build step for a workshop toy.
+-->
+
+---
+
+# Exercise 1 · Polyglot corner — Rust <span class="text-base op-50">optional</span>
+
+Official SDK: the `rmcp` crate — `cargo add rmcp tokio serde schemars anyhow` (rmcp features `server`, `macros`, `transport-io`):
+
+```rust {maxHeight:'280px'}
+use rmcp::{handler::server::wrapper::Parameters, schemars, tool, tool_router, ServiceExt, transport::stdio};
+use std::{collections::HashMap, sync::{Arc, Mutex}};
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+struct CreateParams {
+    /// Title of the new ticket — doc comments become schema descriptions
+    title: String,
+}
+
+#[derive(Clone, Default)]
+struct Tickets {
+    db: Arc<Mutex<HashMap<u32, String>>>,
+}
+
+#[tool_router(server_handler)]  // tools-only shortcut: no separate ServerHandler impl
+impl Tickets {
+    #[tool(description = "List all tickets with their ids.")]
+    fn list_tickets(&self) -> String {
+        format!("{:?}", self.db.lock().unwrap())
+    }
+
+    #[tool(description = "Create a new ticket. Use for NEW issues only.")]
+    fn create_ticket(&self, Parameters(CreateParams { title }): Parameters<CreateParams>) -> String {
+        let mut db = self.db.lock().unwrap();
+        let id = db.len() as u32 + 1;
+        db.insert(id, title);
+        format!("Created ticket {id}.")
+    }
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    Tickets::default().serve(stdio()).await?.waiting().await?;
+    Ok(())
+}
+```
+
+`#[tool]` derives the JSON schema from your types — the type system *is* the input validation. Register the binary: `claude mcp add tickets-rs -- ./target/release/tickets`.
+
+<!--
+Pattern follows the official modelcontextprotocol/rust-sdk README: the #[tool_router(server_handler)] shortcut generates the handler for tools-only servers; Parameters<T> unwraps typed input; schemars doc comments flow into the tool schema.
+-->
+
+---
+
 # Exercise 2 · Write a guardrail hook — the policy <span class="text-base op-50">1/3</span>
 
 **Goal:** deterministic policy-as-code. The model can ignore an instruction in your prompt; it cannot ignore a hook. Create `.claude/hooks/guard.py`:
@@ -682,6 +825,76 @@ Exit 2 sends stderr **to the model**, so the agent self-corrects instead of just
 
 <!--
 The test table is the point: deny cases AND allow cases. If time allows, show the stretch JSON — it's the bridge to Exercise 3's ask gate.
+-->
+
+---
+
+# Exercise 2 · Same guardrail, OpenCode <span class="text-base op-50">plugin</span>
+
+OpenCode hooks are **in-process TypeScript plugins** — drop a file in `.opencode/plugins/` and it loads at startup. Blocking = throwing; your error message is what the model sees:
+
+```ts {maxHeight:'270px'}
+// .opencode/plugins/guard.ts
+import type { Plugin } from "@opencode-ai/plugin"
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*(\s-[a-z]*r[a-z]*\b|\s--recursive\b))(?=.*(\s-[a-z]*f[a-z]*\b|\s--force\b))/i,
+   "recursive force delete (rm -rf)"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+]
+
+export const Guard: Plugin = async ({ project }) => ({
+  "tool.execute.before": async (input, output) => {
+    if (input.tool !== "bash") return
+    const cmd = String(output.args.command ?? "")
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        throw new Error(`Blocked by policy: ${why}. Propose a safer alternative.`)
+  },
+})
+```
+
+Same contract, different transport: `input` names the tool, `output.args` is the *mutable* tool input (you can rewrite instead of block), and a thrown error is your exit-2-with-stderr.
+
+⚠️ **Verify on your version:** plugin hooks historically did not fire for *subagent* tool calls — red-team your policy against `task`-spawned agents before trusting it.
+
+<!--
+Same regex table as guard.py, ported 1:1 including the lookahead rm pattern. Two upgrades over the exit-code protocol: args are mutable (sanitize instead of deny), and it's typed. One downgrade: it runs in-process, so a plugin crash is an OpenCode problem, not an isolated script failure. The subagent gap is a real reported issue — great red-team target.
+-->
+
+---
+
+# Exercise 2 · Same guardrail, Pi <span class="text-base op-50">extension</span>
+
+Pi — badlogic's deliberately minimal agent — loads **TypeScript extensions** from `.pi/extensions/`: one default-exported function wiring into `pi.on(...)`:
+
+```ts {maxHeight:'270px'}
+// .pi/extensions/guard.ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*(\s-[a-z]*r[a-z]*\b|\s--recursive\b))(?=.*(\s-[a-z]*f[a-z]*\b|\s--force\b))/i,
+   "recursive force delete (rm -rf)"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+];
+
+export default function (pi: ExtensionAPI) {
+  pi.on("tool_call", async (event, ctx) => {
+    if (event.toolName !== "bash") return;
+    const cmd = String(event.input.command ?? "");
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        return { block: true, reason: `Blocked by policy: ${why}. Propose a safer alternative.` };
+  });
+}
+```
+
+The verdict is a return value — `{ block: true, reason }` — and note the design choice worth stealing: **a crashing `tool_call` hook blocks the tool** (fail-closed), the exact opposite of the exit-1 footgun.
+
+<!--
+Pi's whole pitch is "the harness is yours": four built-in tools, ~1k-token system prompt, everything else is an extension — the same API that gates a tool can register new tools, commands, and UI. The fail-closed default for tool_call hooks is the philosophical counterpoint to Claude Code's fail-open exit 1: ask the room which they'd rather debug at 2am.
 -->
 
 ---

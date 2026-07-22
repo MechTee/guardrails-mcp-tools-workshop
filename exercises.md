@@ -9,7 +9,7 @@ You will build the exact architecture from the last slide of the talk, on your o
 3. **Exercise 3 — Guard & audit your MCP:** a human-approval gate on ticket deletion plus a JSONL audit trail.
 4. **Bonus — Red team:** smuggle a prompt injection into a ticket and see which guardrail catches it.
 
-> **Using a different agent?** The concepts transfer 1:1. In OpenCode, for example, Exercise 2/3 map to a plugin's `tool.execute.before` hook, and MCP servers are configured in `opencode.json`. The MCP server itself (Exercise 1) is client-agnostic by design — that's the whole point of the protocol.
+> **Using a different agent?** The concepts transfer 1:1 — and this handout now includes concrete ports: the server in TypeScript and Rust (§1.4), and the guard hook as an OpenCode plugin and a Pi extension (§2.4). The MCP server itself is client-agnostic by design — that's the whole point of the protocol.
 
 ---
 
@@ -134,6 +134,91 @@ def open_tickets() -> str:
     return "\n".join(f"#{t['id']} {t['title']}" for t in TICKETS.values() if t["status"] == "open")
 ```
 
+### 1.4 Polyglot corner — the same server in TypeScript and Rust (optional)
+
+The protocol is the contract; the language is yours. **TypeScript** (official SDK — `npm i @modelcontextprotocol/sdk zod`; runs directly on Node 22+):
+
+```ts
+// tickets.ts — run with: node --experimental-strip-types tickets.ts
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+
+const server = new McpServer({ name: "tickets", version: "1.0.0" });
+
+type Ticket = { id: number; title: string; status: string; protected: boolean };
+const TICKETS = new Map<number, Ticket>([
+  [1, { id: 1, title: "Fix login redirect bug", status: "open", protected: false }],
+  [2, { id: 2, title: "Rotate production API keys", status: "open", protected: true }],
+]);
+let nextId = 3;
+
+server.registerTool(
+  "list_tickets",
+  { description: "List all tickets with id, title, status and protection flag." },
+  async () => ({ content: [{ type: "text", text: JSON.stringify([...TICKETS.values()]) }] }),
+);
+
+server.registerTool(
+  "create_ticket",
+  {
+    description: "Create a new ticket. Use for NEW issues only, not for editing existing ones.",
+    inputSchema: { title: z.string() },
+  },
+  async ({ title }) => {
+    const ticket: Ticket = { id: nextId++, title, status: "open", protected: false };
+    TICKETS.set(ticket.id, ticket);
+    return { content: [{ type: "text", text: JSON.stringify(ticket) }] };
+  },
+);
+
+await server.connect(new StdioServerTransport());
+```
+
+Register: `claude mcp add tickets-ts -- node --experimental-strip-types "$(pwd)/tickets.ts"`. Porting `delete_ticket` (with the protected-flag rule) is your warm-up.
+
+**Rust** (official SDK — `cargo add rmcp tokio serde schemars anyhow`, rmcp features `server`, `macros`, `transport-io`):
+
+```rust
+use rmcp::{handler::server::wrapper::Parameters, schemars, tool, tool_router, ServiceExt, transport::stdio};
+use std::{collections::HashMap, sync::{Arc, Mutex}};
+
+#[derive(Debug, serde::Deserialize, schemars::JsonSchema)]
+struct CreateParams {
+    /// Title of the new ticket — doc comments become schema descriptions
+    title: String,
+}
+
+#[derive(Clone, Default)]
+struct Tickets {
+    db: Arc<Mutex<HashMap<u32, String>>>,
+}
+
+#[tool_router(server_handler)]  // tools-only shortcut: no separate ServerHandler impl
+impl Tickets {
+    #[tool(description = "List all tickets with their ids.")]
+    fn list_tickets(&self) -> String {
+        format!("{:?}", self.db.lock().unwrap())
+    }
+
+    #[tool(description = "Create a new ticket. Use for NEW issues only.")]
+    fn create_ticket(&self, Parameters(CreateParams { title }): Parameters<CreateParams>) -> String {
+        let mut db = self.db.lock().unwrap();
+        let id = db.len() as u32 + 1;
+        db.insert(id, title);
+        format!("Created ticket {id}.")
+    }
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    Tickets::default().serve(stdio()).await?.waiting().await?;
+    Ok(())
+}
+```
+
+Register the release binary: `claude mcp add tickets-rs -- ./target/release/tickets`. Note what stayed identical across all three languages: descriptions steer, schemas validate, errors return as strings.
+
 ---
 
 ## Exercise 2 — Write a guardrail hook (≈ 20 min)
@@ -243,6 +328,60 @@ print(json.dumps({"hookSpecificOutput": {
 }}))
 sys.exit(0)
 ```
+
+### 2.4 Same guardrail, other harnesses — OpenCode & Pi (optional)
+
+The policy is portable; only the wiring changes. **OpenCode** loads in-process TypeScript plugins from `.opencode/plugins/` — blocking = throwing, and the error message is what the model sees:
+
+```ts
+// .opencode/plugins/guard.ts
+import type { Plugin } from "@opencode-ai/plugin"
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*(\s-[a-z]*r[a-z]*\b|\s--recursive\b))(?=.*(\s-[a-z]*f[a-z]*\b|\s--force\b))/i,
+   "recursive force delete (rm -rf)"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+]
+
+export const Guard: Plugin = async ({ project }) => ({
+  "tool.execute.before": async (input, output) => {
+    if (input.tool !== "bash") return
+    const cmd = String(output.args.command ?? "")
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        throw new Error(`Blocked by policy: ${why}. Propose a safer alternative.`)
+  },
+})
+```
+
+`output.args` is mutable — you can *sanitize* a command instead of denying it. ⚠️ Verify on your version that plugin hooks fire for **subagent** tool calls (historically they did not — red-team with a `task`-spawned agent).
+
+**Pi** loads TypeScript extensions from `.pi/extensions/`; the verdict is a return value, and a crashing `tool_call` hook **fails closed** (the tool is blocked) — the opposite default to Claude Code's exit-1 footgun:
+
+```ts
+// .pi/extensions/guard.ts
+import type { ExtensionAPI } from "@mariozechner/pi-coding-agent";
+
+const DENY: [RegExp, string][] = [
+  [/\brm\b(?=.*(\s-[a-z]*r[a-z]*\b|\s--recursive\b))(?=.*(\s-[a-z]*f[a-z]*\b|\s--force\b))/i,
+   "recursive force delete (rm -rf)"],
+  [/\bgit\s+push\b.*(\s--force|\s-f)\b/, "force push"],
+  [/\.env\b/, "touching .env"],
+];
+
+export default function (pi: ExtensionAPI) {
+  pi.on("tool_call", async (event, ctx) => {
+    if (event.toolName !== "bash") return;
+    const cmd = String(event.input.command ?? "");
+    for (const [re, why] of DENY)
+      if (re.test(cmd))
+        return { block: true, reason: `Blocked by policy: ${why}. Propose a safer alternative.` };
+  });
+}
+```
+
+**Discuss:** exit codes over stdin (Claude Code, Codex CLI) vs in-process TypeScript (OpenCode, Pi) — which failure mode does each default to when the hook itself crashes, and which would you rather operate?
 
 ---
 
