@@ -1156,6 +1156,17 @@ Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt,
 -->
 
 ---
+layout: center
+class: text-center
+---
+
+<img
+  src="/mcp-meme.jpg"
+  alt="Meme comparing established protocols with MCP, A2A, skills files, and wikis"
+  class="h-[500px] max-w-full object-contain mx-auto"
+/>
+
+---
 
 # MCP setup
 
