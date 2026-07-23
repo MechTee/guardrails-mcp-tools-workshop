@@ -273,7 +273,7 @@ Read top to bottom as the path of one request: two gates before the call, contai
 
 # Two places to put policy
 
-```mermaid {scale: 0.75}
+```mermaid {scale: 0.68}
 flowchart LR
   U["Prompt"] --> M["Model decides"]
   M --> P{{"Permission rules<br>allow · ask · deny"}}
@@ -426,10 +426,12 @@ Issue scoped, short-lived tokens through workload identity or a broker. Never co
 <span>create clean environment</span><i>→</i><span>mount workspace</span><i>→</i><span>run agent</span><i>→</i><span>export diff + logs</span><i>→</i><span>destroy</span>
 </div>
 
-<div class="footnote mt-4 text-center">Assume a guard fails. The sandbox decides what that costs.</div>
+<div class="mt-4 text-center text-sm"><b>Popular options:</b> <code>Docker + gVisor</code> self-hosted · <code>E2B</code> · <code>Daytona</code> · <code>Modal</code> managed</div>
+
+<div class="footnote mt-3 text-center">Assume a guard fails. The sandbox decides what that costs.</div>
 
 <!--
-The containment layer: it doesn't decide anything, it just bounds the damage. Three axes — where it can write, where it can send, what it can authenticate as. OpenCode's external_directory permission (default: ask) is the filesystem axis showing up in config. Everything the lab does happens in a throwaway directory for exactly this reason.
+The containment layer: it doesn't decide anything, it just bounds the damage. Three axes — where it can write, where it can send, what it can authenticate as. Docker with gVisor is a common self-hosted shape; E2B, Daytona, and Modal provide managed agent sandboxes. OpenCode's external_directory permission (default: ask) is the filesystem axis showing up in config. Everything the lab does happens in a throwaway directory for exactly this reason.
 -->
 
 ---
