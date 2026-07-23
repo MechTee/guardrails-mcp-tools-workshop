@@ -136,6 +136,16 @@ def create_ticket(title: str) -> dict:   # types become the input schema
 Four rules, each pinned to the line it governs by a comment. Read the code, not a list. Emphasise the first comment — context is a budget, and tool definitions compete with the actual task — and the last: an agent that gets a good error self-corrects; one that gets a stack trace flails.
 -->
 
+---
+layout: center
+class: text-center
+---
+
+<img
+  src="/mcp-meme.jpg"
+  alt="Meme comparing established protocols with MCP, A2A, skills files, and wikis"
+  class="h-[500px] max-w-full object-contain mx-auto"
+/>
 
 ---
 
@@ -1156,17 +1166,6 @@ The regexes never changed. Only the wiring did — which is the argument for kee
 <!--
 Pi's pitch is "the harness is yours": four built-in tools, a tiny system prompt, everything else an extension. The fail-closed default is the philosophical counterpoint: ask the room which they'd rather debug at 2am, and which they'd rather explain to a customer.
 -->
-
----
-layout: center
-class: text-center
----
-
-<img
-  src="/mcp-meme.jpg"
-  alt="Meme comparing established protocols with MCP, A2A, skills files, and wikis"
-  class="h-[500px] max-w-full object-contain mx-auto"
-/>
 
 ---
 
